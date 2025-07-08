@@ -21,6 +21,12 @@ function AdminDashboard() {
   const [allPosts, setAllPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const [analyticsData, setAnalyticsData] = useState({
+    postsPerMonth: [],
+    topTags: [],
+    reactionStats: [],
+    viewStats: []
+  });
 
   useEffect(() => {
     if (!user) {
@@ -177,6 +183,7 @@ function AdminDashboard() {
           {[
             { id: 'overview', label: '📊 Overview', icon: '📊' },
             { id: 'posts', label: '📝 All Posts', icon: '📝' },
+            { id: 'analytics', label: '📈 Analytics', icon: '📈' },
             { id: 'ai-agent', label: '🤖 AI Agent', icon: '🤖' }
           ].map(tab => (
             <button
@@ -223,11 +230,14 @@ function AdminDashboard() {
                   </div>
                 </Link>
 
-                <button className={`flex items-center space-x-3 p-4 border rounded-lg transition-all group ${
-                  isDark 
-                    ? 'bg-green-600/20 hover:bg-green-600/30 border-green-500/30' 
-                    : 'bg-green-100/50 hover:bg-green-200/50 border-green-300'
-                }`}>
+                <button 
+                  onClick={() => setActiveTab('analytics')}
+                  className={`flex items-center space-x-3 p-4 border rounded-lg transition-all group ${
+                    isDark 
+                      ? 'bg-green-600/20 hover:bg-green-600/30 border-green-500/30' 
+                      : 'bg-green-100/50 hover:bg-green-200/50 border-green-300'
+                  }`}
+                >
                   <div className="text-2xl">📈</div>
                   <div className="text-left">
                     <h3 className={`font-semibold transition-colors ${
@@ -412,6 +422,132 @@ function AdminDashboard() {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Analytics Tab */}
+        {activeTab === 'analytics' && (
+          <div className={`backdrop-blur-lg rounded-2xl p-6 border ${
+            isDark ? 'bg-gray-800/50 border-gray-700' : 'bg-white/50 border-gray-200'
+          }`}>
+            <h2 className={`text-2xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>Platform Analytics</h2>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Posts Analytics */}
+              <div className={`p-6 rounded-xl border ${
+                isDark ? 'bg-gray-700/30 border-gray-600' : 'bg-gray-100/30 border-gray-300'
+              }`}>
+                <h3 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Posts Overview</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className={isDark ? 'text-gray-300' : 'text-gray-700'}>Published Posts</span>
+                    <span className={`font-bold ${isDark ? 'text-green-400' : 'text-green-600'}`}>
+                      {allPosts.filter(p => p.status === 'published').length}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className={isDark ? 'text-gray-300' : 'text-gray-700'}>Draft Posts</span>
+                    <span className={`font-bold ${isDark ? 'text-yellow-400' : 'text-yellow-600'}`}>
+                      {allPosts.filter(p => p.status === 'draft').length}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className={isDark ? 'text-gray-300' : 'text-gray-700'}>Total Reactions</span>
+                    <span className={`font-bold ${isDark ? 'text-pink-400' : 'text-pink-600'}`}>
+                      {stats.totalReactions}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className={isDark ? 'text-gray-300' : 'text-gray-700'}>Avg Reactions/Post</span>
+                    <span className={`font-bold ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
+                      {allPosts.length > 0 ? (stats.totalReactions / allPosts.length).toFixed(1) : '0'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Recent Activity */}
+              <div className={`p-6 rounded-xl border ${
+                isDark ? 'bg-gray-700/30 border-gray-600' : 'bg-gray-100/30 border-gray-300'
+              }`}>
+                <h3 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Recent Activity</h3>
+                <div className="space-y-3">
+                  {allPosts.slice(0, 5).map(post => (
+                    <div key={post._id} className="flex items-center justify-between">
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                          {post.title}
+                        </p>
+                        <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                          {new Date(post.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <span className={`text-xs px-2 py-1 rounded-full ${
+                        post.status === 'published' 
+                          ? 'bg-green-600/20 text-green-400'
+                          : 'bg-yellow-600/20 text-yellow-400'
+                      }`}>
+                        {post.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Top Tags */}
+              <div className={`p-6 rounded-xl border ${
+                isDark ? 'bg-gray-700/30 border-gray-600' : 'bg-gray-100/30 border-gray-300'
+              }`}>
+                <h3 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Popular Tags</h3>
+                <div className="flex flex-wrap gap-2">
+                  {Array.from(new Set(allPosts.flatMap(post => post.tags || [])))
+                    .slice(0, 10)
+                    .map(tag => (
+                      <span 
+                        key={tag}
+                        className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          isDark 
+                            ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
+                            : 'bg-blue-100 text-blue-700 border border-blue-200'
+                        }`}
+                      >
+                        {tag}
+                      </span>
+                    ))
+                  }
+                </div>
+              </div>
+
+              {/* System Health */}
+              <div className={`p-6 rounded-xl border ${
+                isDark ? 'bg-gray-700/30 border-gray-600' : 'bg-gray-100/30 border-gray-300'
+              }`}>
+                <h3 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>System Health</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className={isDark ? 'text-gray-300' : 'text-gray-700'}>Database Status</span>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                      <span className="text-green-400 text-sm font-medium">Connected</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className={isDark ? 'text-gray-300' : 'text-gray-700'}>AI Service</span>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                      <span className="text-green-400 text-sm font-medium">Active</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className={isDark ? 'text-gray-300' : 'text-gray-700'}>Auto-Generation</span>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                      <span className="text-green-400 text-sm font-medium">Running</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 

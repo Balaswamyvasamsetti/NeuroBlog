@@ -7,6 +7,11 @@ const blogSuggestionSchema = new mongoose.Schema({
   tags: [String],
   category: String,
   source: { type: String, required: true }, // News source or topic
+  newsUrl: String, // Original news URL
+  uniqueId: String, // Unique identifier for duplicate prevention
+  featured: { type: Boolean, default: true }, // Featured blog post
+  readTime: String, // Estimated read time
+  publishDate: String, // Formatted publish date
   status: { 
     type: String, 
     enum: ['pending', 'approved', 'rejected', 'published'], 
@@ -18,5 +23,9 @@ const blogSuggestionSchema = new mongoose.Schema({
   publishedAt: Date,
   postId: { type: mongoose.Schema.Types.ObjectId, ref: 'Post' }
 });
+
+// Index for better duplicate detection
+blogSuggestionSchema.index({ uniqueId: 1 });
+blogSuggestionSchema.index({ title: 'text', source: 'text' });
 
 module.exports = mongoose.model('BlogSuggestion', blogSuggestionSchema);

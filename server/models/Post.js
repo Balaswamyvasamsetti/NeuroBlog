@@ -16,6 +16,10 @@ const postSchema = new mongoose.Schema({
     author: String,
     authorUrl: String
   },
+  featured: { type: Boolean, default: false }, // Featured post
+  readTime: String, // Estimated read time
+  publishDate: String, // Formatted publish date
+  newsSource: String, // Original news source if AI generated
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
