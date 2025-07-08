@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "concurrently \"cd server && npm run dev\" \"cd client && npm start\"",
-    "build": "cd client && npm install && npm run build",
-    "start": "node server/server.js"
+    "build": "cd server && npm install && cd ../client && npm install && npm run build",
+    "start": "node server/server.js",
+    "vercel-build": "cd client && npm install && npm run build"
   },
   "dependencies": {
     "concurrently": "^7.6.0"
