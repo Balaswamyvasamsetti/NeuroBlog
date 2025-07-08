@@ -64,7 +64,7 @@ const NeuroBot = () => {
           timestamp: new Date()
         };
         setMessages(prev => [...prev, botMessage]);
-        setIsTypingEffect(false);
+        setIsTyping(false);
       }, 1000);
     } catch (error) {
       const errorMessage = {
@@ -97,7 +97,6 @@ const NeuroBot = () => {
     ]);
     setInputMessage('');
     setIsTyping(false);
-    setIsTypingEffect(false);
   };
 
   const quickQuestions = [
@@ -119,7 +118,6 @@ const NeuroBot = () => {
   ];
 
   const [showAllQuestions, setShowAllQuestions] = useState(false);
-  const [isTypingEffect, setIsTypingEffect] = useState(false);
 
   return (
     <>
@@ -247,7 +245,7 @@ const NeuroBot = () => {
                 </motion.div>
               ))}
 
-              {(isTyping || isTypingEffect) && (
+              {isTyping && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
