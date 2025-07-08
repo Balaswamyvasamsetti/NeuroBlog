@@ -8,30 +8,43 @@ const router = express.Router();
 
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
-// Helper function to call Gemini API
-const callGeminiAPI = async (prompt) => {
-  try {
-    const response = await axios.post(
-      `${GEMINI_API_URL}?key=${process.env.GEMINI_API_KEY}`,
-      {
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 2048,
-        }
-      },
-      { timeout: 20000 }
-    );
-    
-    if (response.data.candidates && response.data.candidates[0] && response.data.candidates[0].content) {
-      return response.data.candidates[0].content.parts[0].text.trim();
+// Helper function to call Gemini API with retry logic
+const callGeminiAPI = async (prompt, retries = 3) => {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const response = await axios.post(
+        `${GEMINI_API_URL}?key=${process.env.GEMINI_API_KEY}`,
+        {
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 2048,
+          }
+        },
+        { timeout: 30000 }
+      );
+      
+      if (response.data.candidates && response.data.candidates[0] && response.data.candidates[0].content) {
+        return response.data.candidates[0].content.parts[0].text.trim();
+      }
+      throw new Error('No valid response from AI service');
+    } catch (error) {
+      const isOverloaded = error.response?.data?.error?.code === 503 || 
+                          error.response?.data?.error?.status === 'UNAVAILABLE';
+      
+      console.log(`Gemini API attempt ${attempt}/${retries} failed:`, error.response?.data?.error || error.message);
+      
+      if (attempt === retries || !isOverloaded) {
+        throw new Error('AI service temporarily unavailable');
+      }
+      
+      // Wait before retry (exponential backoff)
+      const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
+      console.log(`Retrying in ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
-    throw new Error('No valid response from AI service');
-  } catch (error) {
-    console.error('Gemini API Error:', error.response?.data || error.message);
-    throw new Error('AI service temporarily unavailable');
   }
 };
 
