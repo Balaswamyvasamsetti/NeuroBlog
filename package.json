@@ -1,48 +1,12 @@
 {
   "name": "neuroblog",
   "version": "1.0.0",
-  "description": "AI-powered blogging platform with real-time collaboration",
-  "main": "server/server.js",
   "scripts": {
-    "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
-    "server:dev": "cd server && npm run dev",
-    "client:dev": "cd client && npm start",
-    "server:start": "cd server && npm start",
-    "client:build": "cd client && npm run build",
-    "install:all": "npm install && cd server && npm install && cd ../client && npm install",
-    "build": "npm run client:build",
-    "start": "npm run server:start",
-    "docker:build": "docker-compose build",
-    "docker:up": "docker-compose up",
-    "docker:down": "docker-compose down",
-    "clean": "rm -rf node_modules server/node_modules client/node_modules client/build",
-    "lint": "cd client && npm run lint",
-    "test": "cd server && npm test && cd ../client && npm test"
+    "build": "cd client && npm run build",
+    "start": "node server/server.js",
+    "install": "npm install && cd client && npm install"
   },
-  "keywords": [
-    "blog",
-    "ai",
-    "react",
-    "nodejs",
-    "mongodb",
-    "websocket",
-    "gemini"
-  ],
-  "author": "NeuroBlog Team",
-  "license": "MIT",
-  "devDependencies": {
-    "concurrently": "^8.2.2"
-  },
-  "engines": {
-    "node": ">=16.0.0",
-    "npm": ">=8.0.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/yourusername/neuroblog.git"
-  },
-  "bugs": {
-    "url": "https://github.com/yourusername/neuroblog/issues"
-  },
-  "homepage": "https://github.com/yourusername/neuroblog#readme"
+  "dependencies": {
+    "express": "^4.18.2"
+  }
 }

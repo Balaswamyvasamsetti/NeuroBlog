@@ -147,3 +147,4 @@ coverage/
 .npm
 .eslintcache
 .stylelintcache
+.vercel
