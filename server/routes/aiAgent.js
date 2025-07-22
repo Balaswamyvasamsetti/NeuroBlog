@@ -266,7 +266,7 @@ DO NOT use JSON format. DO NOT include dates like "July 23, 2025" in the title. 
 // Start auto-generation when module loads
 startAutoGeneration();
 
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-pro:generateContent';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent';
 
 // Helper function to call Gemini API with retry logic
 const callGeminiAPI = async (prompt, retries = 3) => {
@@ -277,10 +277,10 @@ const callGeminiAPI = async (prompt, retries = 3) => {
         {
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
-            temperature: 0.8,
+            temperature: 0.7,
             topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 2048,
+            topP: 0.9,
+            maxOutputTokens: 4096,
           }
         },
         { timeout: 30000 }
