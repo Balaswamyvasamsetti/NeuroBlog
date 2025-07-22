@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/NeuroBlog/static/css/main.c0455c67.css",
+    "main.js": "/NeuroBlog/static/js/main.147d9e6d.js",
+    "index.html": "/NeuroBlog/index.html",
+    "main.c0455c67.css.map": "/NeuroBlog/static/css/main.c0455c67.css.map",
+    "main.147d9e6d.js.map": "/NeuroBlog/static/js/main.147d9e6d.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.c0455c67.css",
+    "static/js/main.147d9e6d.js"
+  ]
+}
