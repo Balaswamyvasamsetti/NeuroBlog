@@ -1,7 +1,7 @@
 {
   "name": "neuroblog-client",
   "version": "1.0.0",
-  "homepage": "https://yourusername.github.io/NeuroBlog",
+  "homepage": "https://Balaswamyvasamsetti.github.io/NeuroBlog",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
@@ -11,29 +11,29 @@
     "deploy": "gh-pages -d build"
   },
   "dependencies": {
+    "@tailwindcss/typography": "^0.5.10",
     "axios": "^1.6.7",
+    "chart.js": "^4.4.0",
+    "date-fns": "^2.30.0",
     "framer-motion": "^10.0.0",
+    "http-proxy-middleware": "^2.0.6",
     "react": "^18.2.0",
+    "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.2.0",
+    "react-hot-toast": "^2.4.1",
+    "react-markdown": "^9.0.1",
     "react-quill": "^2.0.0",
     "react-router-dom": "^6.22.0",
-    "yjs": "^13.6.10",
     "y-quill": "^0.1.5",
     "y-websocket": "^2.0.2",
-    "chart.js": "^4.4.0",
-    "react-chartjs-2": "^5.2.0",
-    "http-proxy-middleware": "^2.0.6",
-    "react-hot-toast": "^2.4.1",
-    "date-fns": "^2.30.0",
-    "react-markdown": "^9.0.1",
-    "@tailwindcss/typography": "^0.5.10"
+    "yjs": "^13.6.10"
   },
   "devDependencies": {
-    "react-scripts": "^5.0.1",
-    "tailwindcss": "^3.4.1",
     "autoprefixer": "^10.4.16",
+    "gh-pages": "^6.3.0",
     "postcss": "^8.4.32",
-    "gh-pages": "^6.1.1"
+    "react-scripts": "^5.0.1",
+    "tailwindcss": "^3.4.1"
   },
   "browserslist": {
     "production": [
