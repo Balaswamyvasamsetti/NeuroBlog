@@ -2,9 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@100;200;300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100;200;300;400;500;600;700;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap');
 
 /* iOS-Style Design System */
 :root {
@@ -53,12 +54,13 @@
 }
 
 body {
-  font-family: 'SF Pro Display', 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
-  line-height: 1.5;
+  font-family: 'Open Sans', 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+  line-height: 1.6;
   min-height: 100vh;
   overflow-x: hidden;
   transition: background-color 0.3s ease, color 0.3s ease;
   font-size: var(--text-base);
+  letter-spacing: 0.01em;
 }
 
 /* Theme-specific body styles */
@@ -72,17 +74,30 @@ body {
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
 }
 
-/* Unique Typography System */
-.font-sf {
-  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+/* Professional Typography System */
+.font-primary {
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.font-body {
+  font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.font-heading {
+  font-family: 'Playfair Display', Georgia, serif;
 }
 
 .font-mono {
-  font-family: 'JetBrains Mono', 'SF Mono', Monaco, monospace;
+  font-family: 'JetBrains Mono', Monaco, monospace;
+}
+
+/* Legacy font classes for backward compatibility */
+.font-sf {
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .font-poppins {
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Open Sans', sans-serif;
 }
 
 .text-neuro {

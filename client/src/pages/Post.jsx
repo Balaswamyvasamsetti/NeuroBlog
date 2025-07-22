@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { AuthContext } from '../context/AuthContext';
@@ -8,10 +8,12 @@ import RelatedPosts from '../components/RelatedPosts';
 import ShareButton from '../components/ShareButton';
 import UserHoverCard from '../components/UserHoverCard';
 import FollowButton from '../components/FollowButton';
+import PostActions from '../components/PostActions';
 import { toast } from 'react-hot-toast';
 
 function Post() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { user } = useContext(AuthContext);
   const { isDark } = useTheme();
   const [post, setPost] = useState(null);
@@ -36,10 +38,18 @@ function Post() {
 
   const fetchPost = async () => {
     try {
-      const response = await axios.get(`/api/posts/${id}`);
+      // Include auth token to allow viewing draft posts if the user is the author
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
+      const response = await axios.get(`/api/posts/${id}`, { headers });
       setPost(response.data);
     } catch (error) {
       console.error('Error fetching post:', error);
+      if (error.response?.status === 404) {
+        toast.error('Post not found or you do not have permission to view it');
+        navigate('/');
+      }
     } finally {
       setLoading(false);
     }
@@ -202,23 +212,35 @@ function Post() {
               </Link>
               <div className="flex items-center space-x-3">
                 {user && post.author && (user.id === post.author._id || user.role === 'admin') && (
-                  <Link
-                    to={`/edit/${post._id}`}
-                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium transition-colors flex items-center space-x-2"
-                  >
-                    <span>✏️</span>
-                    <span>Edit</span>
-                  </Link>
+                  <div className="flex items-center space-x-2">
+                    <PostActions 
+                      post={post} 
+                      isDark={isDark} 
+                      onPostDeleted={() => navigate('/')} 
+                      onPostStatusChange={(postId, newStatus) => setPost({...post, status: newStatus})}
+                    />
+                  </div>
                 )}
                 <ShareButton post={post} />
               </div>
             </div>
             
-            <h1 className={`text-fluid-3xl font-bold mb-4 leading-tight ${
-              isDark ? 'text-white' : 'text-gray-900'
-            }`}>
-              {post.title}
-            </h1>
+            <div className="flex items-center gap-3 mb-4">
+              <h1 className={`text-fluid-3xl font-bold leading-tight ${
+                isDark ? 'text-white' : 'text-gray-900'
+              }`}>
+                {post.title}
+              </h1>
+              {post.status === 'draft' && (
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  isDark 
+                    ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' 
+                    : 'bg-yellow-100 text-yellow-700 border border-yellow-300'
+                }`}>
+                  Draft
+                </span>
+              )}
+            </div>
             
             <div className={`flex flex-wrap items-center justify-between gap-4 mb-4 text-sm ${
               isDark ? 'text-gray-400' : 'text-gray-600'

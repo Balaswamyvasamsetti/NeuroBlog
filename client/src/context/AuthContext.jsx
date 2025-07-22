@@ -6,42 +6,59 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [authChecked, setAuthChecked] = useState(false);
+
+  // Function to fetch user data from the server
+  const fetchUserData = async (token) => {
+    try {
+      const response = await axios.get('/api/auth/me', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUser(response.data);
+      localStorage.setItem('user', JSON.stringify(response.data));
+      return true;
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setUser(null);
+      return false;
+    } finally {
+      setLoading(false);
+      setAuthChecked(true);
+    }
+  };
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
-    
-    if (token && storedUser) {
-      try {
-        const userData = JSON.parse(storedUser);
-        // If it's admin user, use stored data directly
-        if (userData.role === 'admin') {
+    const initAuth = async () => {
+      const token = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
+      
+      if (token && storedUser) {
+        try {
+          // Set user from localStorage first for immediate UI update
+          const userData = JSON.parse(storedUser);
           setUser(userData);
+          
+          // Then verify with the server
+          await fetchUserData(token);
+        } catch (e) {
+          console.error('Error parsing stored user:', e);
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setUser(null);
           setLoading(false);
-          return;
+          setAuthChecked(true);
         }
-      } catch (e) {
-        console.error('Error parsing stored user:', e);
+      } else {
+        setLoading(false);
+        setAuthChecked(true);
       }
-    }
+    };
     
-    if (token) {
-      axios.get('/api/auth/me', {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then(res => {
-        setUser(res.data);
-        localStorage.setItem('user', JSON.stringify(res.data));
-      })
-      .catch(() => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-      })
-      .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
+    initAuth();
   }, []);
+
 
   const login = async (email, password) => {
     const res = await axios.post('/api/auth/login', { email, password });
@@ -66,7 +83,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, loading, authChecked }}>
       {children}
     </AuthContext.Provider>
   );

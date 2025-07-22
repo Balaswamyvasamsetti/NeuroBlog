@@ -121,4 +121,26 @@ router.post('/:id/upvote', authMiddleware, async (req, res) => {
   }
 });
 
+// Get comment stats for current user
+router.get('/user-stats', authMiddleware, async (req, res) => {
+  try {
+    // Get posts by the user
+    const posts = await Post.find({ author: req.user.userId }).select('_id');
+    const postIds = posts.map(post => post._id);
+    
+    // Count comments on user's posts
+    const commentsOnPosts = await Comment.countDocuments({ post: { $in: postIds } });
+    
+    // Count comments made by the user
+    const commentsByUser = await Comment.countDocuments({ author: req.user.userId });
+    
+    res.json({
+      count: commentsOnPosts,
+      userComments: commentsByUser
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

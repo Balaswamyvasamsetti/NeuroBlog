@@ -60,7 +60,7 @@ router.post('/chat', async (req, res) => {
     }
 
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-2.5-pro',
+      model: 'gemini-1.5-flash-latest',
       generationConfig: {
         temperature: 0.8,
         topK: 64,
@@ -88,7 +88,7 @@ Give a SIMPLE, DIRECT answer. Follow the rules above.`;
     console.error('Chatbot error:', error);
     res.status(500).json({ 
       error: 'Sorry, I encountered an error. Please try again.',
-      response: "🔧 I'm experiencing technical difficulties right now. Please try asking about NeuroBlog features again! I'm here to help with blogging, AI tools, user management, and all platform features."
+      response: "I'm experiencing technical difficulties right now. Please try asking about NeuroBlog features again! I'm here to help with blogging, AI tools, user management, and all platform features."
     });
   }
 });

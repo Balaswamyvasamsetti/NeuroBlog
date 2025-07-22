@@ -3,55 +3,72 @@ const axios = require('axios');
 const authMiddleware = require('../middleware/auth');
 const router = express.Router();
 
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-pro:generateContent';
 const UNSPLASH_API_URL = 'https://api.unsplash.com/search/photos';
 const UNSPLASH_ACCESS_KEY = process.env.UNSPLASH_ACCESS_KEY || 'demo_key';
 
-// Helper function to call Gemini API
-const callGeminiAPI = async (prompt) => {
-  try {
-    const response = await axios.post(
-      `${GEMINI_API_URL}?key=${process.env.GEMINI_API_KEY}`,
-      {
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.8,
-          topK: 64,
-          topP: 0.95,
-          maxOutputTokens: 2048,
-        },
-        safetySettings: [
-          {
-            category: "HARM_CATEGORY_HARASSMENT",
-            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+// Helper function to call Gemini API with retry logic
+const callGeminiAPI = async (prompt, retries = 3) => {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      console.log(`Gemini API attempt ${attempt}/${retries}`);
+      const response = await axios.post(
+        `${GEMINI_API_URL}?key=${process.env.GEMINI_API_KEY}`,
+        {
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.9,
+            topK: 64,
+            topP: 0.95,
+            maxOutputTokens: 2048,
           },
-          {
-            category: "HARM_CATEGORY_HATE_SPEECH",
-            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          safetySettings: [
+            {
+              category: "HARM_CATEGORY_HARASSMENT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_HATE_SPEECH",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            }
+          ]
+        },
+        {
+          timeout: 30000, // Increased timeout
+          headers: {
+            'Content-Type': 'application/json'
           }
-        ]
-      },
-      {
-        timeout: 15000,
-        headers: {
-          'Content-Type': 'application/json'
         }
+      );
+      
+      if (response.data.candidates && response.data.candidates[0] && response.data.candidates[0].content) {
+        return response.data.candidates[0].content.parts[0].text.trim();
       }
-    );
-    
-    if (response.data.candidates && response.data.candidates[0] && response.data.candidates[0].content) {
-      return response.data.candidates[0].content.parts[0].text.trim();
+      throw new Error('No valid response from AI service');
+    } catch (error) {
+      const isOverloaded = error.response?.status === 503 || 
+                          error.response?.data?.error?.code === 503 || 
+                          error.response?.data?.error?.status === 'UNAVAILABLE' ||
+                          error.message.includes('timeout');
+      
+      console.error(`Gemini API attempt ${attempt}/${retries} failed:`, error.response?.data?.error || error.message);
+      
+      // If this is the last retry or it's not an overload/timeout error, throw the error
+      if (attempt === retries || !isOverloaded) {
+        if (error.response?.status === 400) {
+          throw new Error('Invalid request to AI service');
+        }
+        if (error.response?.status === 403) {
+          throw new Error('AI service access denied - check API key');
+        }
+        throw new Error('AI service temporarily unavailable');
+      }
+      
+      // Wait before retry (exponential backoff)
+      const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
+      console.log(`Retrying in ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
-    throw new Error('No valid response from AI service');
-  } catch (error) {
-    console.error('Gemini API Error:', error.response?.data || error.message);
-    if (error.response?.status === 400) {
-      throw new Error('Invalid request to AI service');
-    }
-    if (error.response?.status === 403) {
-      throw new Error('AI service access denied - check API key');
-    }
-    throw new Error('AI service temporarily unavailable');
   }
 };
 
@@ -110,12 +127,26 @@ router.post('/suggest-tags', authMiddleware, async (req, res) => {
     }
     
     const text = `${title || ''} ${content || ''}`.substring(0, 3000);
-    const prompt = `Suggest 5-8 relevant tags for this blog post. Return only the tags separated by commas:\n\n${text}`;
+    const prompt = `Suggest 5-8 diverse and relevant tags for this blog post. Include both general and specific tags from different categories (technology, business, health, education, etc.) as appropriate. Return only the tags separated by commas without any additional text or formatting:\n\n${text}`;
     const aiResponse = await callGeminiAPI(prompt);
     
-    const tags = aiResponse.split(',').map(tag => tag.trim()).filter(tag => tag);
+    // Clean up the response to ensure we get proper tags
+    const cleanResponse = aiResponse
+      .replace(/^tags:?\s*/i, '') // Remove any "Tags:" prefix
+      .replace(/^suggested tags:?\s*/i, '') // Remove any "Suggested Tags:" prefix
+      .replace(/^\d+\.\s*/gm, '') // Remove numbered lists (1., 2., etc.)
+      .replace(/[\r\n]+/g, ','); // Replace newlines with commas
+      
+    // Split by commas, clean up each tag, and filter out empty ones
+    const tags = cleanResponse
+      .split(',')
+      .map(tag => tag.trim().replace(/^[#\-*]\s*/, '')) // Remove #, -, * prefixes
+      .filter(tag => tag && tag.length > 0);
+    
+    console.log('Generated tags:', tags);
     res.json({ tags });
   } catch (error) {
+    console.error('Error generating tags:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -320,18 +351,34 @@ router.post('/suggest-category', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'Title or content is required' });
     }
     
+    // Get available categories from database
+    const Category = require('../models/Category');
+    const availableCategories = await Category.find().select('name');
+    const categoryNames = availableCategories.map(cat => cat.name).join(', ');
+    
+    console.log('Available categories for suggestion:', categoryNames);
+    
     const text = `${title || ''} ${content || ''}`.substring(0, 1000);
-    const prompt = `Based on this blog post content, suggest the most appropriate category from these options or suggest a new one:
+    const prompt = `Based on this blog post content, suggest the most appropriate category from these existing categories in our database:
 
-Existing categories: Technology, Programming, AI & Machine Learning, Web Development, Mobile Development, Cybersecurity, Cloud Computing, Data Science, DevOps, Blockchain, Gaming, Hardware, Software Engineering, Tutorials, News, Opinion, Review
+Existing categories: ${categoryNames || 'Technology, Business, Health, Science, Education, Culture, Sports, Other'}
 
 Content: "${text}"
 
-Return only the category name (one word or short phrase).`;
+Analyze the content carefully and return ONLY the most appropriate category name that matches or is closest to one of the existing categories. Return just the category name with no additional text, explanation, or formatting.`;
     
-    const category = await callGeminiAPI(prompt);
-    res.json({ category: category.trim().replace(/["']/g, '') });
+    const categoryResponse = await callGeminiAPI(prompt);
+    const category = categoryResponse.trim()
+      .replace(/["']/g, '') // Remove quotes
+      .replace(/^category:?\s*/i, '') // Remove "Category:" prefix
+      .replace(/^suggested category:?\s*/i, '') // Remove "Suggested Category:" prefix
+      .replace(/^\d+\.\s*/gm, '') // Remove numbered lists
+      .trim();
+    
+    console.log('AI suggested category:', category);
+    res.json({ category });
   } catch (error) {
+    console.error('Error suggesting category:', error);
     res.status(500).json({ error: error.message });
   }
 });

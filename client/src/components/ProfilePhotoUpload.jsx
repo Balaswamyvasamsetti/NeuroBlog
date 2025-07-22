@@ -46,7 +46,7 @@ function ProfilePhotoUpload({ currentPhoto, onPhotoUpdate }) {
       onPhotoUpdate(preview);
       setIsOpen(false);
       setPreview(null);
-      toast.success('✅ Profile photo updated successfully!');
+      toast.success('Profile photo updated successfully!');
     } catch (error) {
       toast.error('Failed to update profile photo');
     } finally {
@@ -76,7 +76,7 @@ function ProfilePhotoUpload({ currentPhoto, onPhotoUpdate }) {
             <div className={`w-full h-full flex items-center justify-center text-4xl ${
               isDark ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-500'
             }`}>
-              👤
+              <i className="fas fa-user"></i>
             </div>
           )}
         </div>
@@ -87,7 +87,7 @@ function ProfilePhotoUpload({ currentPhoto, onPhotoUpdate }) {
           onClick={() => setIsOpen(true)}
           className="absolute -bottom-2 -right-2 w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-full flex items-center justify-center shadow-lg"
         >
-          📷
+          <i className="fas fa-camera"></i>
         </motion.button>
       </div>
 
@@ -110,12 +110,12 @@ function ProfilePhotoUpload({ currentPhoto, onPhotoUpdate }) {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="text-center mb-6">
-                <h2 className={`text-xl font-bold mb-2 ${
+                <h2 className={`text-xl font-bold mb-2 flex items-center justify-center gap-2 ${
                   isDark 
                     ? 'text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400' 
                     : 'text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600'
                 }`}>
-                  📷 Update Profile Photo
+                  <i className="fas fa-camera"></i> Update Profile Photo
                 </h2>
               </div>
 
@@ -141,8 +141,10 @@ function ProfilePhotoUpload({ currentPhoto, onPhotoUpdate }) {
                           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                           Uploading...
                         </div>
-                      ) : (
-                        '✅ Save Photo'
+                      ) : ( <>
+                          <i className="fas fa-check mr-2"></i>
+                          Save Photo
+                        </>
                       )}
                     </motion.button>
                     <button
@@ -176,7 +178,9 @@ function ProfilePhotoUpload({ currentPhoto, onPhotoUpdate }) {
                     }`}
                   >
                     <div className="text-center">
-                      <div className="text-3xl mb-2">📁</div>
+                      <div className="text-3xl mb-2 text-blue-500">
+                        <i className="fas fa-folder-open"></i>
+                      </div>
                       <p className={`font-medium ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
                         Choose Photo
                       </p>
@@ -192,8 +196,9 @@ function ProfilePhotoUpload({ currentPhoto, onPhotoUpdate }) {
                       whileTap={{ scale: 0.98 }}
                       onClick={removePhoto}
                       className="w-full p-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-medium"
-                    >
-                      🗑️ Remove Current Photo
+                    > 
+                      <i className="fas fa-trash-alt mr-2"></i>
+                      Remove Current Photo
                     </motion.button>
                   )}
                 </div>
@@ -205,7 +210,7 @@ function ProfilePhotoUpload({ currentPhoto, onPhotoUpdate }) {
                   isDark ? 'hover:bg-white/10' : 'hover:bg-gray-100'
                 }`}
               >
-                ✕
+                <i className="fas fa-times"></i>
               </button>
             </motion.div>
           </motion.div>

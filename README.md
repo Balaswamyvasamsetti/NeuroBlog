@@ -2,15 +2,17 @@
 
 A modern, full-stack blogging platform with AI integration, real-time collaboration, and advanced features.
 
+![NeuroBlog Logo](https://via.placeholder.com/150x50?text=NeuroBlog)
+
 ## Features
 
 ### Core Features
-- **User Authentication**: Secure registration/login with JWT tokens
+- **User Authentication**: Secure registration/login with JWT tokens and persistent sessions
 - **Blog Management**: Create, edit, delete, and publish blog posts
-- **AI Integration**: Gemini AI for content suggestions, title generation, and content improvement
+- **AI Integration**: Gemini AI for content suggestions, title generation, and complete blog creation
 - **Real-time Collaboration**: WebSocket-based live editing
 - **Push Notifications**: Web push notifications for new posts
-- **Search & Filtering**: Full-text search with advanced filtering
+- **Search & Filtering**: Full-text search with advanced filtering using SVG icons
 - **Categories & Tags**: Organize content with hierarchical categories
 - **Comments System**: Nested comments with upvoting
 - **Voice Navigation**: Speech recognition for hands-free navigation
@@ -18,12 +20,13 @@ A modern, full-stack blogging platform with AI integration, real-time collaborat
 
 ### Advanced Features
 - **Content Scheduling**: Schedule posts for future publication
-- **Post Reactions**: Emoji reactions on posts
+- **Post Reactions**: SVG icon reactions on posts
 - **Admin Dashboard**: Analytics and content management
 - **SEO Optimization**: Meta tags and search-friendly URLs
 - **Rate Limiting**: API protection against abuse
 - **Error Handling**: Comprehensive error handling and logging
 - **Docker Support**: Containerized deployment
+- **Share Functionality**: Enhanced sharing with properly positioned modals
 
 ## Tech Stack
 
@@ -38,16 +41,17 @@ A modern, full-stack blogging platform with AI integration, real-time collaborat
 - **Rate Limiting** for API protection
 
 ### Frontend
-- **React 18** with functional components
+- **React 18** with functional components and hooks
 - **React Router** for navigation
 - **Framer Motion** for animations
 - **Tailwind CSS** for styling
 - **Axios** for API calls
 - **React Quill** for rich text editing
 - **Chart.js** for analytics
+- **SVG Icons** for consistent UI elements
 
 ### AI Integration
-- **Google Gemini AI** for content assistance
+- **Google Gemini AI** for content assistance and blog generation
 
 ## Installation & Setup
 
@@ -75,7 +79,13 @@ FRONTEND_URL=http://localhost:3000
 
 **Root (.env)**:
 ```env
-# Same as server .env for Docker compose
+PORT=8080
+WS_PORT=8081
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret_key
+GEMINI_API_KEY=your_gemini_api_key
+VAPID_PUBLIC_KEY=your_vapid_public_key
+VAPID_PRIVATE_KEY=your_vapid_private_key
 ```
 
 ### Local Development
@@ -168,6 +178,7 @@ docker-compose up --build
 - `POST /api/gemini/suggest-tags` - Suggest tags
 - `POST /api/gemini/improve-content` - Improve content
 - `POST /api/gemini/content-ideas` - Generate content ideas
+- `POST /api/ai/generate-blog` - Generate complete blog post with formatting and images
 
 ## Project Structure
 
@@ -177,20 +188,34 @@ NeuroBlog/
 │   ├── public/
 │   ├── src/
 │   │   ├── components/     # Reusable components
+│   │   │   ├── NeuroBot.jsx       # AI assistant component
+│   │   │   ├── FilterBar.jsx      # Search and filter component
+│   │   │   ├── QuickFilters.jsx   # Category filtering
+│   │   │   ├── ShareButton.jsx    # Post sharing functionality
+│   │   │   ├── ShareModal.jsx     # Modal for sharing options
+│   │   │   └── AIAgent.jsx        # AI blog generation component
 │   │   ├── context/        # React context
+│   │   │   └── AuthContext.jsx    # Authentication state management
 │   │   ├── pages/          # Page components
+│   │   │   └── Profile.jsx        # User profile page
 │   │   ├── App.jsx
 │   │   └── index.jsx
 │   ├── package.json
 │   └── tailwind.config.js
 ├── server/                 # Node.js backend
 │   ├── middleware/         # Express middleware
-│   ├── models/            # Mongoose models
-│   ├── routes/            # API routes
-│   ├── server.js          # Main server file
+│   │   └── authMiddleware.js      # JWT authentication middleware
+│   ├── models/             # Mongoose models
+│   │   ├── User.js               # User data model
+│   │   └── Post.js               # Blog post data model
+│   ├── routes/             # API routes
+│   │   ├── auth.js               # Authentication routes
+│   │   ├── posts.js              # Blog post routes
+│   │   └── aiAgent.js            # AI integration routes
+│   ├── server.js           # Main server file
 │   └── package.json
-├── docker-compose.yml     # Docker configuration
-├── Dockerfile            # Docker image definition
+├── docker-compose.yml      # Docker configuration
+├── Dockerfile              # Docker image definition
 └── README.md
 ```
 
@@ -203,6 +228,7 @@ The platform integrates with Google's Gemini AI to provide:
 - Tag suggestions
 - Grammar and style improvements
 - Content idea generation
+- Complete blog post generation with proper formatting and images
 
 ### Real-time Collaboration
 Uses WebSocket connections to enable:
@@ -222,9 +248,15 @@ Speech recognition enables:
 - Voice commands for common actions
 - Accessibility improvements
 
+### Enhanced UI Components
+- Replaced emojis with SVG icons for consistent styling
+- Improved share functionality with properly positioned modals
+- Better category selection in post creation
+- Persistent authentication to prevent login redirects on page refresh
+
 ## Security Features
 
-- JWT-based authentication
+- JWT-based authentication with persistent sessions
 - Password hashing with bcrypt
 - Rate limiting on API endpoints
 - CORS protection
@@ -240,6 +272,16 @@ Speech recognition enables:
 - Lazy loading
 - Caching strategies
 - Minified production builds
+- Optimized AI response parsing
+
+## Recent Improvements
+
+- **UI Enhancement**: Replaced all emojis with SVG icons for a more professional look
+- **Authentication Fix**: Implemented persistent authentication to prevent login redirects on page refresh
+- **Share Functionality**: Fixed share dialog positioning to appear on top of all elements
+- **AI Blog Generation**: Enhanced AI blog generation with better formatting and image support
+- **Category Selection**: Fixed issues with category selection in the create post page
+- **Error Handling**: Improved error handling in AI response parsing
 
 ## Contributing
 

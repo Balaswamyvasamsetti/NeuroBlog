@@ -90,7 +90,7 @@ const generateSmartPlaceholderImages = (topic, count) => {
   });
 };
 
-// Clean text formatter - pure readable content
+// Enhanced text formatter - preserves markdown formatting and adds images
 const formatBlogContent = (content, images, topic, newsUrl) => {
   const currentDate = new Date().toLocaleDateString('en-US', { 
     year: 'numeric', 
@@ -98,30 +98,28 @@ const formatBlogContent = (content, images, topic, newsUrl) => {
     day: 'numeric'
   });
 
-  // Remove ALL formatting and create pure text
+  // Clean content but preserve markdown formatting
   const cleanContent = content
     .replace(/<[^>]*>/g, '') // Remove HTML tags
-    .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove bold
-    .replace(/\*([^*]+)\*/g, '$1') // Remove italic
-    .replace(/#{1,6}\s*/g, '') // Remove headers
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Remove links
-    .replace(/>/g, '') // Remove quotes
-    .replace(/•/g, '-') // Replace bullets
-    .replace(/\n{3,}/g, '\n\n') // Clean breaks
+    .replace(/\n{3,}/g, '\n\n') // Clean excessive breaks
     .trim();
 
   return `${cleanContent}
 
+## Featured Images
+
 Image: ${images[0]?.url}
 Photo Credit: ${images[0]?.credit}
 
-${images[1] ? `Additional Image: ${images[1]?.url}\n\n` : ''}Related Resources:
-- Original Source: ${newsUrl || 'Not available'}
-- Topic: ${topic}
-- Published: ${currentDate}
-- Reading Time: 8-12 minutes
+${images[1] ? `Additional Image: ${images[1]?.url}\n\n` : ''}
+## Additional Information
 
-Stay updated with the latest technology insights!
+- **Original Source**: ${newsUrl || 'Not available'}
+- **Topic**: ${topic}
+- **Published**: ${currentDate}
+- **Reading Time**: 8-12 minutes
+
+*Stay updated with the latest technology insights!*
 
 © 2025 NeuroBlog - All rights reserved.`;
 };
@@ -184,25 +182,46 @@ const startAutoGeneration = () => {
       
       const uniqueAngle = ['breaking analysis', 'expert insights', 'industry impact', 'technical breakdown', 'market trends'][Math.floor(Math.random() * 5)];
       
-      const prompt = `LIVE UPDATE (${currentDate}): "${topicItem.title}" - ${topicItem.description}
+      const prompt = `LIVE UPDATE: "${topicItem.title}" - ${topicItem.description}
 
-Create a PROFESSIONAL ${uniqueAngle} blog post with perfect structure:
+Category: ${topicItem.category || 'General'} | Source: ${topicItem.source}
+
+Write a COMPLETE, PROFESSIONAL ${uniqueAngle} blog post specific to the ${topicItem.category || 'general'} field with perfect structure.
 
 ✅ REQUIREMENTS:
 - Clean, readable text (NO HTML tags)
 - Use markdown: ## for headings, **bold**, *italic*
-- Professional quotes with attribution
-- Bullet points for statistics
-- Current date context throughout
-- Engaging and informative content
+- Professional quotes with attribution from experts in ${topicItem.category || 'the field'}
+- Bullet points for statistics and data relevant to ${topicItem.category || 'the topic'}
+- Engaging and informative content with field-specific insights
+- Balanced perspective with multiple viewpoints
+- Technical accuracy appropriate for the ${topicItem.category || 'subject'} field
+- FULL LENGTH article (at least 1000 words)
 
-Return ONLY valid JSON:
-{
-  "title": "Compelling title (max 70 chars, unique from news headline)",
-  "summary": "Engaging summary with immediate relevance and ${currentDate} context",
-  "content": "## Breaking Development\n\nWhat just happened and why it matters right now (${currentDate})...\n\n## Key Statistics and Data\n\n• Important data point 1 with specific numbers\n• Market figure 2 with percentages\n• Industry metric 3 with growth data\n• Recent developments and trends\n\n## Expert Analysis\n\nComprehensive analysis of the situation and its broader implications...\n\n> \"This development marks a turning point for the industry. We're seeing unprecedented changes.\" - Industry Expert, Leading Tech Company\n\n## Future Outlook for ${new Date().getFullYear()}\n\nWhat this means for the coming months and years ahead...\n\n## Impact on Businesses and Consumers\n\nPractical implications and what people need to know...\n\n## Key Takeaways\n\n• Critical insight 1 for immediate consideration\n• Important implication 2 for long-term planning\n• Action point 3 for staying competitive\n• Trend 4 to monitor closely\n\n## Conclusion\n\nProfessional summary with clear next steps and future outlook.\n\n**Live Update:** ${currentDate}",
-  "tags": ["${new Date().getFullYear()}", "live-update", "breaking-news", "analysis", "trending"],
-  "category": "General",
+Format your response as follows:
+
+title: "Compelling title specific to ${topicItem.category || 'the field'} (NO DATES, NO YEARS, NO NUMBERS at the end)"
+
+summary: "Brief engaging summary of the article"
+
+content: 
+## Main Heading
+
+Full article content here...
+
+## Second Heading
+
+More content here...
+
+tags: ["${topicItem.category || 'general'}", "analysis", "insights", "trends"]
+
+category: "${topicItem.category || 'General'}"
+
+DO NOT use JSON format. DO NOT include dates like "July 23, 2025" in the title. DO NOT add "Analysis 0104" or similar numbers to the title.
+  "summary": "Engaging summary with immediate relevance to ${topicItem.category || 'the field'} and ${currentDate} context",
+  "content": "## Breaking Development in ${topicItem.category || 'the Field'}\n\nWhat just happened and why it matters right now (${currentDate}) to professionals and enthusiasts in ${topicItem.category || 'this field'}...\n\n## Key Statistics and Data\n\n• Important data point 1 with specific numbers relevant to ${topicItem.category || 'the field'}\n• Market figure 2 with percentages showing impact on ${topicItem.category || 'the industry'}\n• Industry metric 3 with growth data specific to ${topicItem.category || 'this sector'}\n• Recent developments and trends in ${topicItem.category || 'the field'}\n\n## Expert Analysis\n\nComprehensive analysis of the situation and its broader implications for ${topicItem.category || 'the industry'}...\n\n> \"This development marks a turning point for ${topicItem.category || 'our field'}. We're seeing unprecedented changes that will reshape how we approach key challenges.\" - Leading Expert in ${topicItem.category || 'the Field'}\n\n## Future Outlook for ${new Date().getFullYear()}\n\nWhat this means for the coming months and years ahead in ${topicItem.category || 'this sector'}...\n\n## Impact on Businesses and Consumers\n\nPractical implications for stakeholders in the ${topicItem.category || 'industry'} and what people need to know...\n\n## Key Takeaways\n\n• Critical insight 1 for immediate consideration in ${topicItem.category || 'the field'}\n• Important implication 2 for long-term planning in ${topicItem.category || 'this sector'}\n• Action point 3 for staying competitive in the evolving ${topicItem.category || 'landscape'}\n• Trend 4 to monitor closely for future ${topicItem.category || 'industry'} developments\n\n## Conclusion\n\nProfessional summary with clear next steps and future outlook for ${topicItem.category || 'the field'}.\n\n**Live Update:** ${currentDate}",
+  "tags": ["${topicItem.category || 'general'}", "${new Date().getFullYear()}", "analysis", "insights", "innovation", "${topicItem.category ? topicItem.category.toLowerCase() + '-trends' : 'trends'}"],
+  "category": "${topicItem.category || 'General'}",
   "featured": true,
   "publishDate": "${currentDate}"
 }`;
@@ -247,7 +266,7 @@ Return ONLY valid JSON:
 // Start auto-generation when module loads
 startAutoGeneration();
 
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-pro:generateContent';
 
 // Helper function to call Gemini API with retry logic
 const callGeminiAPI = async (prompt, retries = 3) => {
@@ -258,7 +277,7 @@ const callGeminiAPI = async (prompt, retries = 3) => {
         {
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
-            temperature: 0.7,
+            temperature: 0.8,
             topK: 40,
             topP: 0.95,
             maxOutputTokens: 2048,
@@ -330,29 +349,60 @@ const fetchFromGoogleNews = async () => {
   
   console.log('🔄 Fetching from Google News API...');
 
-  // Diverse keywords across multiple fields
-  const allKeywords = [
-    // Technology
-    'AI technology', 'machine learning', 'blockchain', 'cybersecurity', 'cloud computing', 'quantum computing',
-    // Business & Finance
-    'startup funding', 'market trends', 'economic news', 'cryptocurrency', 'stock market', 'business innovation',
-    // Health & Science
-    'medical breakthrough', 'scientific discovery', 'health research', 'climate change', 'space exploration', 'biotechnology',
-    // Entertainment & Culture
-    'entertainment news', 'movie industry', 'music trends', 'gaming industry', 'social media trends', 'digital culture',
-    // Sports & Lifestyle
-    'sports news', 'fitness trends', 'travel industry', 'food trends', 'fashion industry', 'lifestyle changes',
-    // Education & Career
-    'education technology', 'career trends', 'remote work', 'skill development', 'online learning', 'job market',
-    // Environment & Sustainability
-    'renewable energy', 'environmental protection', 'sustainable living', 'green technology', 'conservation efforts',
-    // Politics & Society
-    'policy changes', 'social movements', 'government initiatives', 'public health', 'urban development'
-  ];
-  const randomKeyword = allKeywords[Math.floor(Math.random() * allKeywords.length)];
+  // Enhanced diverse keywords across multiple fields
+  const keywordsByCategory = {
+    technology: [
+      'AI technology', 'machine learning', 'blockchain', 'cybersecurity', 'cloud computing', 'quantum computing',
+      'robotics', 'virtual reality', 'augmented reality', 'IoT devices', 'edge computing', 'tech innovation'
+    ],
+    business: [
+      'startup funding', 'market trends', 'economic news', 'cryptocurrency', 'stock market', 'business innovation',
+      'venture capital', 'entrepreneurship', 'digital transformation', 'fintech', 'e-commerce', 'global trade'
+    ],
+    health: [
+      'medical breakthrough', 'healthcare innovation', 'health research', 'mental health', 'wellness trends', 'biotechnology',
+      'medical devices', 'pharmaceutical research', 'telemedicine', 'nutrition science', 'disease prevention', 'public health'
+    ],
+    science: [
+      'scientific discovery', 'space exploration', 'climate science', 'physics breakthrough', 'biology research', 'chemistry innovation',
+      'astronomy news', 'neuroscience', 'genetics research', 'materials science', 'quantum physics', 'scientific method'
+    ],
+    agriculture: [
+      'sustainable farming', 'agricultural technology', 'crop innovation', 'precision agriculture', 'vertical farming', 'organic farming',
+      'food security', 'agricultural policy', 'farm automation', 'livestock management', 'soil health', 'water conservation'
+    ],
+    education: [
+      'education technology', 'online learning', 'higher education', 'K-12 innovation', 'STEM education', 'educational policy',
+      'learning science', 'student success', 'teacher development', 'educational equity', 'classroom technology', 'lifelong learning'
+    ],
+    environment: [
+      'renewable energy', 'environmental protection', 'sustainable living', 'green technology', 'conservation efforts', 'climate action',
+      'biodiversity', 'clean energy', 'circular economy', 'waste management', 'ocean conservation', 'forest preservation'
+    ],
+    culture: [
+      'entertainment news', 'movie industry', 'music trends', 'gaming industry', 'social media trends', 'digital culture',
+      'art movements', 'cultural heritage', 'literature trends', 'fashion innovation', 'media evolution', 'creative industries'
+    ],
+    sports: [
+      'sports innovation', 'athlete performance', 'sports technology', 'fitness trends', 'esports growth', 'sports medicine',
+      'team dynamics', 'sports analytics', 'coaching methods', 'sports business', 'athletic training', 'sports psychology'
+    ],
+    politics: [
+      'policy changes', 'social movements', 'government initiatives', 'public policy', 'urban development', 'international relations',
+      'governance innovation', 'civic technology', 'political trends', 'democracy initiatives', 'legislative process', 'public administration'
+    ]
+  };
+  
+  // Select a random category first, then a random keyword from that category
+  const categories = Object.keys(keywordsByCategory);
+  const selectedCategory = categories[Math.floor(Math.random() * categories.length)];
+  const keywordsForCategory = keywordsByCategory[selectedCategory];
+  const randomKeyword = keywordsForCategory[Math.floor(Math.random() * keywordsForCategory.length)];
+  
+  console.log(`🔍 Searching for news in category: ${selectedCategory}, keyword: ${randomKeyword}`);
     
-  // Get very recent news (last 4 hours)
-  const fromTime = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString();
+  // Get very recent news (last 8 hours for more variety)
+  const fromTime = new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString();
   
   const response = await axios.get(`https://newsapi.org/v2/everything`, {
     params: {
@@ -381,7 +431,7 @@ const fetchFromGoogleNews = async () => {
         source: article.source.name,
         url: article.url,
         publishedAt: article.publishedAt,
-        category: categorizeArticle(article.title + ' ' + article.description),
+        category: selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1), // Use the selected category directly
         uniqueId: Buffer.from(article.title + article.publishedAt).toString('base64').substring(0, 10)
       }));
   }
@@ -444,92 +494,212 @@ const fetchRealNews = async () => {
   }
 };
 
-// Diverse fallback topics across all fields
+// Enhanced diverse fallback topics across all fields
 const getFallbackTopics = () => {
-  const topics = [
-    // Technology
-    { title: 'AI Revolution in Software Development', description: 'How AI is transforming coding and development workflows', source: 'Tech News', category: 'Technology' },
-    { title: 'Quantum Computing Breakthroughs', description: 'Latest advances in quantum technology and applications', source: 'Science Today', category: 'Technology' },
-    { title: 'Cybersecurity Trends 2025', description: 'Emerging threats and security solutions', source: 'Security Weekly', category: 'Technology' },
-    
-    // Business & Finance
-    { title: 'Startup Funding Landscape Changes', description: 'New trends in venture capital and startup investments', source: 'Business Weekly', category: 'Business' },
-    { title: 'Cryptocurrency Market Evolution', description: 'Latest developments in digital currency markets', source: 'Finance Today', category: 'Finance' },
-    { title: 'Remote Work Revolution Continues', description: 'How remote work is reshaping business operations', source: 'Work Trends', category: 'Business' },
-    
-    // Health & Science
-    { title: 'Medical AI Breakthrough', description: 'Artificial intelligence revolutionizing healthcare diagnostics', source: 'Health Science', category: 'Health' },
-    { title: 'Climate Change Solutions', description: 'Innovative approaches to environmental challenges', source: 'Environmental News', category: 'Environment' },
-    { title: 'Space Exploration Milestones', description: 'Recent achievements in space technology and exploration', source: 'Space Today', category: 'Science' },
-    
-    // Entertainment & Culture
-    { title: 'Digital Entertainment Trends', description: 'How streaming and gaming are evolving', source: 'Entertainment Weekly', category: 'Entertainment' },
-    { title: 'Social Media Platform Changes', description: 'Latest updates in social media landscape', source: 'Digital Culture', category: 'Social Media' },
-    { title: 'Gaming Industry Innovation', description: 'New technologies transforming gaming experiences', source: 'Gaming News', category: 'Gaming' },
-    
-    // Education & Career
-    { title: 'Online Learning Revolution', description: 'How digital education is transforming learning', source: 'Education Today', category: 'Education' },
-    { title: 'Future of Work Skills', description: 'Essential skills for the modern workplace', source: 'Career Insights', category: 'Career' },
-    { title: 'Professional Development Trends', description: 'New approaches to career advancement', source: 'Professional Growth', category: 'Career' },
-    
-    // Lifestyle & Health
-    { title: 'Wellness Technology Advances', description: 'How technology is improving personal health', source: 'Wellness Weekly', category: 'Health' },
-    { title: 'Sustainable Living Practices', description: 'Practical approaches to environmental responsibility', source: 'Green Living', category: 'Lifestyle' },
-    { title: 'Travel Industry Recovery', description: 'How travel is adapting to new global realities', source: 'Travel News', category: 'Travel' }
-  ];
-  return topics.sort(() => Math.random() - 0.5).slice(0, 8);
+  const topicsByCategory = {
+    Technology: [
+      { title: 'AI Revolution in Software Development', description: 'How AI is transforming coding and development workflows', source: 'Tech News' },
+      { title: 'Quantum Computing Breakthroughs', description: 'Latest advances in quantum technology and applications', source: 'Science Today' },
+      { title: 'Cybersecurity Trends 2025', description: 'Emerging threats and security solutions', source: 'Security Weekly' },
+      { title: 'The Rise of Edge Computing', description: 'How processing data closer to the source is changing tech infrastructure', source: 'Tech Insights' },
+      { title: 'Augmented Reality in Daily Life', description: 'How AR applications are becoming mainstream tools', source: 'Digital Trends' }
+    ],
+    Business: [
+      { title: 'Startup Funding Landscape Changes', description: 'New trends in venture capital and startup investments', source: 'Business Weekly' },
+      { title: 'Cryptocurrency Market Evolution', description: 'Latest developments in digital currency markets', source: 'Finance Today' },
+      { title: 'Remote Work Revolution Continues', description: 'How remote work is reshaping business operations', source: 'Work Trends' },
+      { title: 'Supply Chain Innovations', description: 'New technologies transforming global supply chains', source: 'Business Innovation' },
+      { title: 'Sustainable Business Models', description: 'How companies are integrating sustainability into core operations', source: 'Green Business' }
+    ],
+    Health: [
+      { title: 'Medical AI Breakthrough', description: 'Artificial intelligence revolutionizing healthcare diagnostics', source: 'Health Science' },
+      { title: 'Telemedicine Expansion', description: 'How virtual healthcare is becoming the new standard', source: 'Medical Tech' },
+      { title: 'Mental Health Technology', description: 'Digital solutions addressing the global mental health crisis', source: 'Wellness Today' },
+      { title: 'Precision Medicine Advances', description: 'Tailoring medical treatments to individual genetic profiles', source: 'Medical Research' },
+      { title: 'Wearable Health Monitoring', description: 'How consumer devices are transforming preventive healthcare', source: 'Health Tech' }
+    ],
+    Science: [
+      { title: 'Space Exploration Milestones', description: 'Recent achievements in space technology and exploration', source: 'Space Today' },
+      { title: 'Breakthrough in Quantum Physics', description: 'New discoveries challenging our understanding of reality', source: 'Physics World' },
+      { title: 'Genetic Engineering Ethics', description: 'Balancing innovation with ethical considerations in genetics', source: 'Science Ethics' },
+      { title: 'Neuroscience and Consciousness', description: 'New insights into the nature of human awareness', source: 'Brain Research' },
+      { title: 'Materials Science Revolution', description: 'How new materials are enabling technological breakthroughs', source: 'Materials Today' }
+    ],
+    Agriculture: [
+      { title: 'Vertical Farming Expansion', description: 'How urban agriculture is scaling to feed growing cities', source: 'Future Farming' },
+      { title: 'Precision Agriculture Technology', description: 'Using data and automation to optimize crop yields', source: 'Ag Tech Review' },
+      { title: 'Sustainable Livestock Management', description: 'Innovations reducing the environmental impact of animal agriculture', source: 'Sustainable Farming' },
+      { title: 'Soil Health Revolution', description: 'New approaches to maintaining and restoring agricultural soils', source: 'Earth Science' },
+      { title: 'Drought-Resistant Crop Development', description: 'Breeding and engineering plants for climate resilience', source: 'Crop Science' }
+    ],
+    Education: [
+      { title: 'Online Learning Revolution', description: 'How digital education is transforming learning', source: 'Education Today' },
+      { title: 'AI Tutors in Education', description: 'Personalized learning through artificial intelligence', source: 'EdTech Review' },
+      { title: 'Global Education Access', description: 'Bridging educational divides through technology', source: 'Global Learning' },
+      { title: 'Neuroscience in Learning', description: 'How brain research is informing educational methods', source: 'Learning Science' },
+      { title: 'Skills-Based Education Models', description: 'Moving beyond traditional degrees to competency-based learning', source: 'Future Skills' }
+    ],
+    Environment: [
+      { title: 'Climate Change Solutions', description: 'Innovative approaches to environmental challenges', source: 'Environmental News' },
+      { title: 'Ocean Cleanup Technologies', description: 'New methods to address marine pollution', source: 'Ocean Conservation' },
+      { title: 'Renewable Energy Breakthroughs', description: 'Advances making clean energy more efficient and affordable', source: 'Clean Energy' },
+      { title: 'Biodiversity Preservation', description: 'Technologies helping to protect endangered species and ecosystems', source: 'Conservation Tech' },
+      { title: 'Carbon Capture Innovations', description: 'New approaches to removing carbon dioxide from the atmosphere', source: 'Climate Tech' }
+    ],
+    Culture: [
+      { title: 'Digital Entertainment Trends', description: 'How streaming and gaming are evolving', source: 'Entertainment Weekly' },
+      { title: 'Social Media Platform Changes', description: 'Latest updates in social media landscape', source: 'Digital Culture' },
+      { title: 'Virtual Reality in Arts', description: 'How VR is transforming artistic expression and experiences', source: 'Arts Technology' },
+      { title: 'Digital Preservation of Heritage', description: 'Using technology to protect cultural artifacts and traditions', source: 'Heritage Tech' },
+      { title: 'Evolution of Online Communities', description: 'How digital spaces are reshaping social connections', source: 'Community Studies' }
+    ],
+    Sports: [
+      { title: 'Sports Analytics Revolution', description: 'How data is changing athletic performance and strategy', source: 'Sports Tech' },
+      { title: 'Esports Global Growth', description: 'The rise of competitive gaming as mainstream entertainment', source: 'Gaming World' },
+      { title: 'Wearable Tech in Athletics', description: 'How athletes are using technology to optimize performance', source: 'Athletic Performance' },
+      { title: 'Virtual Training Environments', description: 'Using simulation to enhance athletic preparation', source: 'Training Science' },
+      { title: 'Fan Engagement Technologies', description: 'How sports teams are connecting with audiences in the digital age', source: 'Sports Business' }
+    ]
+  };
+  
+  // Select 1-2 topics from each category to ensure diversity
+  const selectedTopics = [];
+  const categories = Object.keys(topicsByCategory);
+  
+  // Ensure we get at least one topic from each category
+  categories.forEach(category => {
+    const topicsInCategory = topicsByCategory[category];
+    // Randomly select 1 topic from each category
+    const randomIndex = Math.floor(Math.random() * topicsInCategory.length);
+    const selectedTopic = topicsInCategory[randomIndex];
+    selectedTopic.category = category; // Add the category to the topic
+    selectedTopics.push(selectedTopic);
+  });
+  
+  // Shuffle the selected topics to randomize the order
+  return selectedTopics.sort(() => Math.random() - 0.5);
 };
 
-// Helper function to clean and parse AI response
+// Enhanced helper function to clean and parse AI response
 const parseAIResponse = (response) => {
   try {
-    // Remove markdown code blocks if present
-    let cleanResponse = response.replace(/```json\s*|```\s*/g, '').trim();
+    // First, try to extract the blog content directly without JSON parsing
+    // This is the preferred approach to avoid JSON formatting issues
+    const cleanedResponse = response
+      .replace(/```json\s*|```\s*/g, '') // Remove code blocks
+      .replace(/^\s*\{[\s\S]*?"content":\s*"/, '') // Remove JSON prefix up to content
+      .replace(/"[\s\S]*\}\s*$/, '') // Remove JSON suffix after content
+      .replace(/\\n/g, '\n') // Fix escaped newlines
+      .replace(/\\"/g, '"') // Fix escaped quotes
+      .trim();
     
-    // Try to find JSON object in the response
-    const jsonMatch = cleanResponse.match(/\{[\s\S]*\}/);
+    // Extract title directly from the response
+    let title = "";
+    const titleMatch = response.match(/"title":\s*"([^"]+)"/); 
+    if (titleMatch && titleMatch[1]) {
+      title = titleMatch[1]
+        .replace(/\s*-\s*\w+\s+\d+,\s*\d{4}\s*/g, '') // Remove dates like "- July 23, 2025"
+        .replace(/\s*-\s*(?:Perspective|Analysis|Update)\s*\d+\s*/g, '') // Remove "- Analysis 0104"
+        .replace(/\s*\(\d{4}\)\s*/g, '') // Remove years in parentheses like "(2025)"
+        .trim();
+    } else {
+      // Generate a title based on the first line of content
+      const firstLine = cleanedResponse.split('\n')[0];
+      title = firstLine.replace(/^#+\s*/, '').substring(0, 70); // Remove heading markers and limit length
+    }
+    
+    // Extract summary
+    let summary = "";
+    const summaryMatch = response.match(/"summary":\s*"([^"]+)"/); 
+    if (summaryMatch && summaryMatch[1]) {
+      summary = summaryMatch[1];
+    } else {
+      // Generate summary from first paragraph
+      const paragraphs = cleanedResponse.split('\n\n');
+      if (paragraphs.length > 1) {
+        summary = paragraphs[1].replace(/^#+\s*/, '').substring(0, 150);
+      } else {
+        summary = cleanedResponse.substring(0, 150);
+      }
+    }
+    
+    // Extract tags
+    let tags = [`${new Date().getFullYear()}`, 'trending'];
+    const tagsMatch = response.match(/"tags":\s*\[([^\]]+)\]/); 
+    if (tagsMatch && tagsMatch[1]) {
+      try {
+        tags = JSON.parse(`[${tagsMatch[1]}]`);
+      } catch (e) {
+        // Use default tags if parsing fails
+      }
+    }
+    
+    // Extract category
+    let category = "General";
+    const categoryMatch = response.match(/"category":\s*"([^"]+)"/); 
+    if (categoryMatch && categoryMatch[1]) {
+      category = categoryMatch[1];
+    }
+    
+    // If we have a valid blog structure, return it
+    if (cleanedResponse.length > 500) {
+      return {
+        title: title.substring(0, 75),
+        content: cleanedResponse,
+        summary: summary,
+        tags: tags,
+        category: category,
+        featured: true,
+        readTime: '8-12 min read',
+        publishDate: new Date().toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric'
+        })
+      };
+    }
+    
+    // If direct extraction failed, try JSON parsing as fallback
+    const jsonMatch = response.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
-      cleanResponse = jsonMatch[0];
+      const parsed = JSON.parse(jsonMatch[0].replace(/\\n/g, '\n').replace(/\\"/g, '"'));
+      
+      if (parsed.title && parsed.content) {
+        // Clean up the title
+        let cleanTitle = parsed.title
+          .replace(/\s*-\s*\w+\s+\d+,\s*\d{4}\s*/g, '') // Remove dates
+          .replace(/\s*-\s*(?:Perspective|Analysis|Update)\s*\d+\s*/g, '') // Remove "- Analysis 0104"
+          .replace(/\s*\(\d{4}\)\s*/g, ''); // Remove years
+        
+        return {
+          title: cleanTitle.substring(0, 75),
+          content: parsed.content,
+          summary: parsed.summary || parsed.title,
+          tags: Array.isArray(parsed.tags) ? parsed.tags : [`${new Date().getFullYear()}`, 'trending'],
+          category: parsed.category || 'General',
+          featured: parsed.featured || true,
+          readTime: parsed.readTime || '8-12 min read',
+          publishDate: parsed.publishDate || new Date().toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric'
+          })
+        };
+      }
     }
     
-    const parsed = JSON.parse(cleanResponse);
-    
-    // Validate required fields
-    if (!parsed.title || !parsed.content) {
-      throw new Error('Missing required fields');
-    }
-    
-    return {
-      title: parsed.title.substring(0, 75),
-      content: parsed.content,
-      summary: parsed.summary || parsed.title,
-      tags: Array.isArray(parsed.tags) ? parsed.tags : [`${new Date().getFullYear()}`, 'trending'],
-      category: parsed.category || 'General',
-      featured: parsed.featured || true,
-      readTime: parsed.readTime || '8-10 min read',
-      publishDate: parsed.publishDate || new Date().toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric'
-      })
-    };
+    throw new Error('Could not extract valid blog content');
   } catch (error) {
-    console.error('Failed to parse AI response:', response.substring(0, 200));
-    // Return a fallback structure with current date
-    const currentDate = new Date().toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric'
-    });
-    
+    console.error('Failed to parse AI response:', error.message);
+    // Return the raw response as blog content with a generic title
     return {
-      title: `Breaking Tech News - ${currentDate}`,
-      content: `## Latest Technology Update\n\n${response.substring(0, 600)}\n\n## Key Points\n\n• Breaking development in technology sector\n• Significant industry impact and implications\n• Future outlook for ${new Date().getFullYear()}\n• Market reactions and expert opinions\n\n## Analysis\n\nThis development represents a significant shift in the technology landscape, with far-reaching implications for businesses and consumers alike.\n\n> \"This is a game-changing development that will reshape how we think about technology solutions.\" - Tech Industry Expert\n\n## What This Means\n\nThe implications of this development extend beyond immediate market reactions, potentially influencing long-term technology adoption and innovation strategies.\n\n## Key Takeaways\n\n• Monitor industry developments closely\n• Assess impact on current technology strategies\n• Prepare for potential market shifts\n• Stay informed about emerging trends\n\n**Published:** ${currentDate}\n\n© 2025 NeuroBlog Technology Insights`,
-      summary: `Latest technology news and comprehensive analysis - ${currentDate}`,
-      tags: [`${new Date().getFullYear()}`, 'breaking-news', 'trending', 'ai-generated'],
+      title: "Latest Industry Insights",
+      content: response.replace(/```json\s*|```\s*/g, '').replace(/\{[\s\S]*?"content":\s*"/, '').replace(/"[\s\S]*\}\s*$/, ''),
+      summary: "Comprehensive analysis of recent developments in the industry",
+      tags: [`${new Date().getFullYear()}`, 'insights', 'analysis', 'industry-trends'],
       category: 'General',
       featured: true,
-      publishDate: currentDate
+      publishDate: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
     };
   }
 };
@@ -583,11 +753,11 @@ router.post('/generate-suggestions', authMiddleware, async (req, res) => {
       
       const uniqueAngle = ['comprehensive analysis', 'expert insights', 'future implications', 'industry impact', 'technical deep-dive', 'market analysis'][Math.floor(Math.random() * 6)];
       
-      const prompt = `BREAKING NEWS (${currentDate}): "${topicItem.title}" - ${topicItem.description}
+      const prompt = `BREAKING NEWS: "${topicItem.title}" - ${topicItem.description}
 
-Source: ${topicItem.source} | Published: ${topicItem.publishedAt || 'Just now'}
+Source: ${topicItem.source} | Category: ${topicItem.category || 'General'} | Published: ${topicItem.publishedAt || 'Just now'}
 
-Create a PROFESSIONAL, engaging blog post with ${uniqueAngle}. Requirements:
+Create a PROFESSIONAL, engaging blog post with ${uniqueAngle} in the ${topicItem.category || 'general'} field. Requirements:
 
 ✅ PERFECT BLOG STRUCTURE:
 - Clean, readable text (NO HTML tags)
@@ -606,21 +776,23 @@ Create a PROFESSIONAL, engaging blog post with ${uniqueAngle}. Requirements:
 - Practical implications for readers
 - Future predictions for ${new Date().getFullYear()}
 - Actionable takeaways
+- Field-specific terminology and concepts
+- Balanced perspective with multiple viewpoints
 
 Return ONLY valid JSON:
 
 {
-  "title": "Compelling, SEO-optimized title (max 70 chars, unique from news)",
+  "title": "Compelling, SEO-optimized title (max 70 chars, NO DATES, NO YEARS, unique from news)",
   "summary": "Engaging 2-3 sentence hook with current relevance and impact",
-  "content": "Introduction\n\nEngaging opening paragraph that sets the context and explains why this matters right now in ${currentDate}. This development has significant implications for the technology industry and beyond.\n\nKey Statistics and Market Data\n\n- Important statistic 1 with specific numbers and percentages\n- Market data point 2 showing growth trends and market impact\n- Industry figure 3 demonstrating significant changes\n- Recent survey results highlighting consumer and business reactions\n\nDeep Analysis: What's Really Happening\n\nComprehensive analysis of the situation, breaking down the key factors and implications. This section explores the underlying causes and potential consequences of this development.\n\nIndustry Impact and Reactions\n\nDetailed examination of how this affects different sectors and stakeholders. Major companies and industry leaders are responding with various strategies and initiatives.\n\nExpert Opinion: This represents a significant shift in how we approach technology solutions. The implications are far-reaching and will likely influence industry practices for years to come. - Dr. Sarah Johnson, Tech Industry Analyst\n\nFuture Implications for ${new Date().getFullYear()}\n\nForward-looking analysis of what this means for the coming months and years. Several key trends are emerging that will shape the technology landscape.\n\nWhat This Means for Businesses and Consumers\n\nPractical implications and actionable insights for different audiences. Businesses need to adapt their strategies while consumers should be aware of upcoming changes.\n\nKey Takeaways\n\n- Critical insight 1 that readers should remember for decision-making\n- Important implication 2 for long-term planning and strategy\n- Action item 3 for staying competitive in the market\n- Future trend 4 to monitor closely for opportunities\n\nConclusion\n\nProfessional wrap-up that ties everything together and provides clear next steps for readers. This development marks a pivotal moment in technology evolution.",
-  "tags": ["${new Date().getFullYear()}", "breaking-news", "analysis", "insights", "trending"],
-  "category": "General",
+  "content": "## Introduction\n\nEngaging opening paragraph that sets the context and explains why this matters right now in ${currentDate}. This development has significant implications for the ${topicItem.category || 'industry'} and beyond.\n\n## Key Statistics and Market Data\n\n- Important statistic 1 with specific numbers and percentages\n- Market data point 2 showing growth trends and market impact\n- Industry figure 3 demonstrating significant changes\n- Recent survey results highlighting consumer and business reactions\n\n## Deep Analysis: What's Really Happening\n\nComprehensive analysis of the situation, breaking down the key factors and implications. This section explores the underlying causes and potential consequences of this development.\n\n## Industry Impact and Reactions\n\nDetailed examination of how this affects different sectors and stakeholders. Major companies and industry leaders are responding with various strategies and initiatives.\n\n> \"This represents a significant shift in how we approach ${topicItem.category || 'industry'} solutions. The implications are far-reaching and will likely influence practices for years to come.\" - Dr. Sarah Johnson, ${topicItem.category || 'Industry'} Analyst\n\n## Future Implications for ${new Date().getFullYear()}\n\nForward-looking analysis of what this means for the coming months and years. Several key trends are emerging that will shape the ${topicItem.category || 'industry'} landscape.\n\n## What This Means for Businesses and Consumers\n\nPractical implications and actionable insights for different audiences. Businesses need to adapt their strategies while consumers should be aware of upcoming changes.\n\n## Key Takeaways\n\n- Critical insight 1 that readers should remember for decision-making\n- Important implication 2 for long-term planning and strategy\n- Action item 3 for staying competitive in the market\n- Future trend 4 to monitor closely for opportunities\n\n## Conclusion\n\nProfessional wrap-up that ties everything together and provides clear next steps for readers. This development marks a pivotal moment in ${topicItem.category || 'industry'} evolution.",
+  "tags": ["${topicItem.category || 'general'}", "${new Date().getFullYear()}", "analysis", "insights", "trending", "innovation"],
+  "category": "${topicItem.category || 'General'}",
   "featured": true,
   "readTime": "8-12 min read",
   "publishDate": "${currentDate}"
 }
 
-Make it PERFECT and ENGAGING!`;
+Make it PERFECT, ENGAGING, and SPECIFIC to the ${topicItem.category || 'general'} field!`;
 
       try {
         // Fetch relevant images for the topic

@@ -10,6 +10,82 @@ function AIAgent() {
   const [generating, setGenerating] = useState(false);
   const [selectedSuggestion, setSelectedSuggestion] = useState(null);
   const { isDark } = useTheme();
+  
+  // Function to render formatted content with images
+  const renderFormattedContent = (content) => {
+    if (!content) return null;
+    
+    try {
+      // Clean up content format
+      // Remove any title/summary/tags sections that might be in the content
+      content = content
+        .replace(/^title:\s*"[^"]*"\s*\n/m, '')
+        .replace(/^summary:\s*"[^"]*"\s*\n/m, '')
+        .replace(/^tags:\s*\[[^\]]*\]\s*\n/m, '')
+        .replace(/^category:\s*"[^"]*"\s*\n/m, '')
+        .replace(/^content:\s*\n/m, '');
+      
+      // Extract image URLs from content
+      const imageRegex = /Image:\s*(https?:\/\/[^\s]+)/g;
+      const imageMatches = [...content.matchAll(imageRegex)];
+      const images = imageMatches.map(match => match[1]);
+      
+      // Remove image references from content
+      let cleanContent = content.replace(/Image:\s*https?:\/\/[^\s]+\s*/g, '');
+      cleanContent = cleanContent.replace(/Photo Credit:.*?\n/g, '');
+      cleanContent = cleanContent.replace(/Additional Image:.*?\n/g, '');
+      
+      // Format content for display
+      const formattedContent = cleanContent
+        .replace(/#{1,6}\s+([^\n]+)/g, '<strong>$1</strong>') // Replace headers with bold
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>') // Replace bold
+        .replace(/\*([^*]+)\*/g, '<em>$1</em>') // Replace italic
+        .replace(/\n\n/g, '<br/><br/>') // Replace double newlines
+        .replace(/\n/g, '<br/>') // Replace newlines
+        .replace(/\{[\s\S]*?\}/g, '') // Remove any remaining JSON objects
+        .replace(/title:\s*"[^"]*"\s*/g, '') // Remove any title markers
+        .replace(/summary:\s*"[^"]*"\s*/g, '') // Remove any summary markers
+        .replace(/tags:\s*\[[^\]]*\]\s*/g, '') // Remove any tags markers
+        .replace(/category:\s*"[^"]*"\s*/g, ''); // Remove any category markers
+      
+      return (
+        <div className="space-y-4">
+          {/* Display first 500 characters of content */}
+          <div 
+            className="text-sm"
+            dangerouslySetInnerHTML={{ 
+              __html: formattedContent.substring(0, 1000) + '...' 
+            }} 
+          />
+          
+          {/* Display images if available */}
+          {images.length > 0 && (
+            <div className="mt-4 space-y-2">
+              <h4 className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>Featured Images:</h4>
+              <div className="grid grid-cols-2 gap-2">
+                {images.slice(0, 2).map((imageUrl, index) => (
+                  <div key={index} className="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                    <img 
+                      src={imageUrl} 
+                      alt={`Blog image ${index + 1}`} 
+                      className="w-full h-32 object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = 'https://via.placeholder.com/300x200?text=Image+Unavailable';
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    } catch (error) {
+      console.error('Error rendering content:', error);
+      return <div className="whitespace-pre-wrap">{content.substring(0, 500)}...</div>;
+    }
+  };
 
   useEffect(() => {
     fetchSuggestions();
@@ -263,8 +339,8 @@ function AIAgent() {
                   <h4 className={`font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                     Content Preview:
                   </h4>
-                  <div className={`text-sm whitespace-pre-wrap ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                    {selectedSuggestion.content.substring(0, 500)}...
+                  <div className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                    {renderFormattedContent(selectedSuggestion.content)}
                   </div>
                 </div>
 

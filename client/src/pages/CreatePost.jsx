@@ -32,19 +32,17 @@ function CreatePost() {
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
   useEffect(() => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
     fetchCategories();
-  }, [user, navigate]);
+  }, []);
 
   const fetchCategories = async () => {
     try {
       const response = await axios.get('/api/categories');
+      console.log('Categories fetched:', response.data);
       setCategories(response.data);
     } catch (error) {
       console.error('Error fetching categories:', error);
+      toast.error('Failed to load categories');
     }
   };
 
@@ -70,7 +68,7 @@ function CreatePost() {
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }}
       );
       setSuggestions(prev => ({ ...prev, titles: response.data.titles }));
-      toast.success('✨ Title suggestions generated!');
+      toast.success('Title suggestions generated!');
     } catch (error) {
       toast.error('Failed to generate titles');
     } finally {
@@ -90,7 +88,7 @@ function CreatePost() {
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }}
       );
       setFormData(prev => ({ ...prev, summary: response.data.summary }));
-      toast.success('🤖 Summary generated successfully!');
+      toast.success('Summary generated successfully!');
     } catch (error) {
       toast.error('Failed to generate summary');
     } finally {
@@ -109,9 +107,15 @@ function CreatePost() {
         { content: formData.body, title: formData.title },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }}
       );
-      setSuggestions(prev => ({ ...prev, tags: response.data.tags }));
-      toast.success('🏷️ Tag suggestions generated!');
+      
+      // Make sure we have an array of tags
+      const tags = Array.isArray(response.data.tags) ? response.data.tags : 
+                  typeof response.data.tags === 'string' ? response.data.tags.split(',').map(tag => tag.trim()) : [];
+      
+      setSuggestions(prev => ({ ...prev, tags }));
+      toast.success('Tag suggestions generated!');
     } catch (error) {
+      console.error('Error generating tags:', error);
       toast.error('Failed to generate tags');
     } finally {
       setAiLoading(false);
@@ -130,7 +134,7 @@ function CreatePost() {
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }}
       );
       setSeoData(response.data.suggestions);
-      toast.success('🔍 SEO analysis completed!');
+      toast.success('SEO analysis completed!');
     } catch (error) {
       toast.error('SEO analysis failed');
     } finally {
@@ -150,7 +154,7 @@ function CreatePost() {
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }}
       );
       setContentAnalysis(response.data.analysis);
-      toast.success('📊 Content analysis completed!');
+      toast.success('Content analysis completed!');
     } catch (error) {
       toast.error('Content analysis failed');
     } finally {
@@ -165,6 +169,11 @@ function CreatePost() {
     }
     setAiLoading(true);
     try {
+      // Make sure we have categories loaded
+      if (categories.length === 0) {
+        await fetchCategories();
+      }
+      
       const response = await axios.post('/api/gemini/suggest-category',
         { title: formData.title, content: formData.body },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }}
@@ -172,18 +181,25 @@ function CreatePost() {
       
       // Find matching category or create suggestion
       const suggestedCategory = response.data.category;
+      console.log('AI suggested category:', suggestedCategory);
+      console.log('Available categories:', categories);
+      
+      // Case-insensitive matching
       const matchingCategory = categories.find(cat => 
         cat.name.toLowerCase().includes(suggestedCategory.toLowerCase()) ||
         suggestedCategory.toLowerCase().includes(cat.name.toLowerCase())
       );
       
       if (matchingCategory) {
+        console.log('Found matching category:', matchingCategory);
         setFormData(prev => ({ ...prev, category: matchingCategory._id }));
-        toast.success(`📂 Category set to: ${matchingCategory.name}`);
+        setShowCategoryDropdown(false); // Close dropdown after selection
+        toast.success(`Category set to: ${matchingCategory.name}`);
       } else {
-        toast.success(`🤖 AI suggests: ${suggestedCategory}`);
+        toast.success(`AI suggests: ${suggestedCategory}`);
       }
     } catch (error) {
+      console.error('Error generating category:', error);
       toast.error('Failed to generate category');
     } finally {
       setAiLoading(false);
@@ -217,7 +233,7 @@ function CreatePost() {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       
-      toast.success(formData.status === 'published' ? '🚀 Post published!' : '💾 Draft saved!');
+      toast.success(formData.status === 'published' ? 'Post published!' : 'Draft saved!');
       navigate(`/post/${response.data._id}`);
     } catch (error) {
       toast.error(error.response?.data?.error || 'Error creating post');
@@ -280,7 +296,12 @@ function CreatePost() {
                   {aiLoading ? (
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                   ) : (
-                    <span>✨ AI Suggest</span>
+                    <span className="flex items-center gap-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                      </svg>
+                      AI Suggest
+                    </span>
                   )}
                 </button>
               </div>
@@ -299,8 +320,11 @@ function CreatePost() {
               />
               {suggestions.titles.length > 0 && (
                 <div className="mt-6 space-y-3">
-                  <p className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                    ✨ AI Suggestions:
+                  <p className={`text-sm font-medium flex items-center gap-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                    AI Suggestions:
                   </p>
                   {suggestions.titles.map((title, index) => (
                     <button
@@ -350,7 +374,12 @@ function CreatePost() {
                     {aiLoading ? (
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                     ) : (
-                      <span>📊 Analyze</span>
+                      <span className="flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        Analyze
+                      </span>
                     )}
                   </button>
                   <button
@@ -362,7 +391,12 @@ function CreatePost() {
                     {aiLoading ? (
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                     ) : (
-                      <span>🔍 SEO</span>
+                      <span className="flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        SEO
+                      </span>
                     )}
                   </button>
                 </div>
@@ -386,8 +420,11 @@ function CreatePost() {
                 <div className={`mt-6 p-6 rounded-2xl border ${
                   isDark ? 'bg-indigo-500/10 border-indigo-500/30' : 'bg-indigo-50 border-indigo-200'
                 }`}>
-                  <h4 className={`font-bold mb-3 ${isDark ? 'text-indigo-400' : 'text-indigo-700'}`}>
-                    📊 Content Analysis
+                  <h4 className={`font-bold mb-3 flex items-center gap-1 ${isDark ? 'text-indigo-400' : 'text-indigo-700'}`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    Content Analysis
                   </h4>
                   <div className={`text-sm whitespace-pre-line ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                     {contentAnalysis}
@@ -400,8 +437,11 @@ function CreatePost() {
                 <div className={`mt-6 p-6 rounded-2xl border ${
                   isDark ? 'bg-yellow-500/10 border-yellow-500/30' : 'bg-yellow-50 border-yellow-200'
                 }`}>
-                  <h4 className={`font-bold mb-3 ${isDark ? 'text-yellow-400' : 'text-yellow-700'}`}>
-                    🔍 SEO Optimization
+                  <h4 className={`font-bold mb-3 flex items-center gap-1 ${isDark ? 'text-yellow-400' : 'text-yellow-700'}`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    SEO Optimization
                   </h4>
                   <div className={`text-sm whitespace-pre-line ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                     {seoData}
@@ -424,9 +464,14 @@ function CreatePost() {
                   }`}
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className={`text-lg font-bold ${
+                    <h3 className={`text-lg font-bold flex items-center gap-1 ${
                       isDark ? 'text-white' : 'text-gray-900'
-                    }`}>🖼️ Featured Image</h3>
+                    }`}>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      Featured Image
+                    </h3>
                     <button
                       type="button"
                       onClick={() => setSelectedImage(null)}
@@ -465,9 +510,14 @@ function CreatePost() {
               }`}
             >
               <div className="flex items-center justify-between mb-6">
-                <label className={`text-xl font-bold ${
+                <label className={`text-xl font-bold flex items-center gap-2 ${
                   isDark ? 'text-white' : 'text-gray-900'
-                }`}>📋 Summary</label>
+                }`}>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Summary
+                </label>
                 <button
                   type="button"
                   onClick={generateSummary}
@@ -477,7 +527,12 @@ function CreatePost() {
                   {aiLoading ? (
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                   ) : (
-                    <span>🤖 Generate</span>
+                    <span className="flex items-center gap-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                      </svg>
+                      Generate
+                    </span>
                   )}
                 </button>
               </div>
@@ -508,9 +563,14 @@ function CreatePost() {
                   : 'bg-white/70 border-gray-200/50 hover:border-green-500/30'
               }`}>
                 <div className="flex items-center justify-between mb-6">
-                  <label className={`text-xl font-bold ${
+                  <label className={`text-xl font-bold flex items-center gap-2 ${
                     isDark ? 'text-white' : 'text-gray-900'
-                  }`}>🏷️ Tags</label>
+                  }`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
+                    Tags
+                  </label>
                   <button
                     type="button"
                     onClick={generateTags}
@@ -520,7 +580,12 @@ function CreatePost() {
                     {aiLoading ? (
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                     ) : (
-                      <span>🏷️ Suggest</span>
+                      <span className="flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                        </svg>
+                        Suggest
+                      </span>
                     )}
                   </button>
                 </div>
@@ -535,25 +600,55 @@ function CreatePost() {
                       : 'bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-500 focus:border-green-500 focus:ring-green-500/20'
                   }`}
                 />
-                {suggestions.tags.length > 0 && (
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {suggestions.tags.map((tag, index) => (
-                      <button
-                        key={index}
-                        type="button"
-                        onClick={() => {
-                          const newTags = [...new Set([...formData.tags, tag])];
-                          setFormData(prev => ({ ...prev, tags: newTags }));
-                        }}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 hover:scale-105 ${
-                          isDark 
-                            ? 'bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/30' 
-                            : 'bg-green-100 hover:bg-green-200 text-green-700 border border-green-300'
-                        }`}
-                      >
-                        + {tag}
-                      </button>
-                    ))}
+                {suggestions.tags && suggestions.tags.length > 0 && (
+                  <div className="mt-4">
+                    <p className={`text-sm font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                      Click to add suggested tags:
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {suggestions.tags.map((tag, index) => {
+                        const isAlreadyAdded = formData.tags.includes(tag);
+                        return (
+                          <button
+                            key={index}
+                            type="button"
+                            onClick={() => {
+                              if (!isAlreadyAdded) {
+                                const newTags = [...formData.tags, tag];
+                                setFormData(prev => ({ ...prev, tags: newTags }));
+                                toast.success(`Added tag: ${tag}`);
+                              }
+                            }}
+                            disabled={isAlreadyAdded}
+                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 hover:scale-105 ${
+                              isAlreadyAdded
+                                ? isDark 
+                                  ? 'bg-gray-700/50 text-gray-500 border border-gray-600 cursor-not-allowed' 
+                                  : 'bg-gray-100 text-gray-500 border border-gray-300 cursor-not-allowed'
+                                : isDark 
+                                  ? 'bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/30' 
+                                  : 'bg-green-100 hover:bg-green-200 text-green-700 border border-green-300'
+                            }`}
+                          >
+                            {isAlreadyAdded ? (
+                              <span className="flex items-center gap-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                                {tag}
+                              </span>
+                            ) : (
+                              <span className="flex items-center gap-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                {tag}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
@@ -564,9 +659,14 @@ function CreatePost() {
                   : 'bg-white/70 border-gray-200/50 hover:border-purple-500/30'
               }`}>
                 <div className="flex items-center justify-between mb-6">
-                  <label className={`text-xl font-bold ${
+                  <label className={`text-xl font-bold flex items-center gap-2 ${
                     isDark ? 'text-white' : 'text-gray-900'
-                  }`}>📂 Category</label>
+                  }`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                    </svg>
+                    Category
+                  </label>
                   <button
                     type="button"
                     onClick={generateCategory}
@@ -576,7 +676,12 @@ function CreatePost() {
                     {aiLoading ? (
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                     ) : (
-                      <span>🤖 Suggest</span>
+                      <span className="flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
+                        Suggest
+                      </span>
                     )}
                   </button>
                 </div>
@@ -591,7 +696,7 @@ function CreatePost() {
                     }`}
                   >
                     <span>
-                      {formData.category 
+                      {formData.category && categories.length > 0
                         ? categories.find(cat => cat._id === formData.category)?.name || 'Select a category'
                         : 'Select a category'
                       }
@@ -609,44 +714,61 @@ function CreatePost() {
                         ? 'bg-gray-800/95 border-white/10' 
                         : 'bg-white/95 border-gray-200'
                     }`}>
-                      <div 
-                        className={`p-4 cursor-pointer transition-all duration-200 hover:scale-[1.02] ${
-                          isDark 
-                            ? 'hover:bg-purple-500/20 text-gray-300 hover:text-white' 
-                            : 'hover:bg-purple-100 text-gray-600 hover:text-gray-900'
-                        } ${!formData.category ? (isDark ? 'bg-purple-500/10 text-purple-400' : 'bg-purple-50 text-purple-600') : ''}`}
-                        onClick={() => {
-                          setFormData(prev => ({ ...prev, category: '' }));
-                          setShowCategoryDropdown(false);
-                        }}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <span className="text-lg">📂</span>
-                          <span className="font-medium">No Category</span>
+                      {categories.length === 0 ? (
+                        <div className="p-4 text-center">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-500 mx-auto mb-2"></div>
+                          <p className={isDark ? 'text-gray-300' : 'text-gray-600'}>Loading categories...</p>
                         </div>
-                      </div>
-                      {categories.map(category => (
-                        <div
-                          key={category._id}
-                          className={`p-4 cursor-pointer transition-all duration-200 hover:scale-[1.02] ${
-                            isDark 
-                              ? 'hover:bg-purple-500/20 text-gray-300 hover:text-white border-t border-white/5' 
-                              : 'hover:bg-purple-100 text-gray-600 hover:text-gray-900 border-t border-gray-100'
-                          } ${formData.category === category._id ? (isDark ? 'bg-purple-500/10 text-purple-400' : 'bg-purple-50 text-purple-600') : ''}`}
-                          onClick={() => {
-                            setFormData(prev => ({ ...prev, category: category._id }));
-                            setShowCategoryDropdown(false);
-                          }}
-                        >
-                          <div className="flex items-center space-x-3">
-                            <span className="text-lg">🏷️</span>
-                            <span className="font-medium">{category.name}</span>
-                            {formData.category === category._id && (
-                              <span className="ml-auto text-purple-500">✓</span>
-                            )}
+                      ) : (
+                        <>
+                          <div 
+                            className={`p-4 cursor-pointer transition-all duration-200 hover:scale-[1.02] ${
+                              isDark 
+                                ? 'hover:bg-purple-500/20 text-gray-300 hover:text-white' 
+                                : 'hover:bg-purple-100 text-gray-600 hover:text-gray-900'
+                            } ${!formData.category ? (isDark ? 'bg-purple-500/10 text-purple-400' : 'bg-purple-50 text-purple-600') : ''}`}
+                            onClick={() => {
+                              setFormData(prev => ({ ...prev, category: '' }));
+                              setShowCategoryDropdown(false);
+                            }}
+                          >
+                            <div className="flex items-center space-x-3">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                              </svg>
+                              <span className="font-medium">No Category</span>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                          {categories.map(category => (
+                            <div
+                              key={category._id}
+                              className={`p-4 cursor-pointer transition-all duration-200 hover:scale-[1.02] ${
+                                isDark 
+                                  ? 'hover:bg-purple-500/20 text-gray-300 hover:text-white border-t border-white/5' 
+                                  : 'hover:bg-purple-100 text-gray-600 hover:text-gray-900 border-t border-gray-100'
+                              } ${formData.category === category._id ? (isDark ? 'bg-purple-500/10 text-purple-400' : 'bg-purple-50 text-purple-600') : ''}`}
+                              onClick={() => {
+                                setFormData(prev => ({ ...prev, category: category._id }));
+                                setShowCategoryDropdown(false);
+                              }}
+                            >
+                              <div className="flex items-center space-x-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                </svg>
+                                <span className="font-medium">{category.name}</span>
+                                {formData.category === category._id && (
+                                  <span className="ml-auto text-purple-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
@@ -666,9 +788,14 @@ function CreatePost() {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-6">
-                  <label className={`text-xl font-bold ${
+                  <label className={`text-xl font-bold flex items-center gap-2 ${
                     isDark ? 'text-white' : 'text-gray-900'
-                  }`}>🚀 Status:</label>
+                  }`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Status:
+                  </label>
                   <select
                     name="status"
                     value={formData.status}
@@ -712,7 +839,23 @@ function CreatePost() {
                     {loading ? (
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                     ) : (
-                      <span>{formData.status === 'published' ? '🚀 Publish' : '💾 Save Draft'}</span>
+                      <span className="flex items-center gap-1">
+                        {formData.status === 'published' ? (
+                          <>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Publish
+                          </>
+                        ) : (
+                          <>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                            </svg>
+                            Save Draft
+                          </>
+                        )}
+                      </span>
                     )}
                   </motion.button>
                 </div>

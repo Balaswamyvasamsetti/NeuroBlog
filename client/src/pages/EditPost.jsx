@@ -25,21 +25,21 @@ function EditPost() {
   const [originalPost, setOriginalPost] = useState(null);
 
   useEffect(() => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
     fetchPost();
     fetchCategories();
-  }, [user, navigate, id]);
+  }, [id]);
 
   const fetchPost = async () => {
     try {
-      const response = await axios.get(`/api/posts/${id}`);
+      const response = await axios.get(`/api/posts/${id}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
       const post = response.data;
       
       // Check if user owns this post or is admin
-      if (post.author._id !== user.id && user.role !== 'admin') {
+      if (user && post.author._id !== user.id && user.role !== 'admin') {
+        // Show an alert and redirect to home page
+        alert('You can only edit posts that you have created.');
         navigate('/');
         return;
       }
@@ -56,6 +56,7 @@ function EditPost() {
       setSelectedImage(post.featuredImage);
     } catch (error) {
       console.error('Error fetching post:', error);
+      alert('Error loading the post. You may not have permission to edit it.');
       navigate('/');
     } finally {
       setFetchLoading(false);

@@ -44,12 +44,12 @@ function AdminSetup() {
         className="max-w-md w-full space-y-8"
       >
         <div className="text-center">
-          <h1 className={`text-4xl font-bold mb-4 ${
+          <h1 className={`text-4xl font-bold mb-4 flex items-center justify-center gap-3 ${
             isDark 
               ? 'text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-pink-400' 
               : 'text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-pink-600'
           }`}>
-            🛡️ Admin Setup
+            <i className="fas fa-user-shield"></i> Admin Setup
           </h1>
           <p className={`text-lg ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
             Create the first admin account
@@ -147,7 +147,10 @@ function AdminSetup() {
                   <span>Creating Admin...</span>
                 </div>
               ) : (
-                '🛡️ Create Admin Account'
+                <>
+                  <i className="fas fa-user-shield mr-2"></i>
+                  Create Admin Account
+                </>
               )}
             </motion.button>
           </form>
@@ -159,13 +162,16 @@ function AdminSetup() {
                 isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              ← Back to Login
+              <i className="fas fa-arrow-left mr-2"></i>
+              Back to Login
             </button>
           </div>
         </motion.div>
 
         <div className={`text-center text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-          <p>⚠️ This is a one-time setup for creating the first admin account</p>
+          <p className="flex items-center justify-center">
+            <i className="fas fa-exclamation-triangle text-yellow-500 mr-2"></i> This is a one-time setup for creating the first admin account
+          </p>
         </div>
       </motion.div>
     </div>

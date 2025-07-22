@@ -14,18 +14,27 @@ router.get('/', async (req, res) => {
     // Admin can see all posts, regular users only published
     const token = req.header('Authorization')?.replace('Bearer ', '');
     let isAdmin = false;
+    let userId = null;
     
     if (token) {
       try {
         const jwt = require('jsonwebtoken');
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         isAdmin = decoded.role === 'admin';
+        userId = decoded.userId;
       } catch (e) {}
     }
     
-    if (!isAdmin) {
+    // If author parameter is provided and matches the current user, show all their posts
+    const isViewingOwnPosts = author && userId && author === userId;
+    
+    if (status === 'all' && (isAdmin || isViewingOwnPosts)) {
+      // Don't filter by status for admins or users viewing their own posts with status=all
+    } else if (!isAdmin && !isViewingOwnPosts) {
+      // Regular users can only see published posts from others
       query.status = 'published';
     } else if (status !== 'all') {
+      // Apply specific status filter if provided
       query.status = status;
     }
     
@@ -125,6 +134,9 @@ router.get('/', async (req, res) => {
       })
     );
     
+    // Log the posts with comment counts for debugging
+    console.log(`Found ${postsWithCommentCount.length} posts with comment counts`);
+    
     const total = await Post.countDocuments(query);
     res.json({ posts: postsWithCommentCount, total, pages: Math.ceil(total / limit) });
   } catch (error) {
@@ -138,7 +150,31 @@ router.get('/:id', async (req, res) => {
     const post = await Post.findById(req.params.id)
       .populate('author', 'username email')
       .populate('category', 'name');
+    
     if (!post) return res.status(404).json({ error: 'Post not found' });
+    
+    // Check if post is a draft and restrict access
+    if (post.status === 'draft') {
+      // Get user from token if available
+      const token = req.header('Authorization')?.replace('Bearer ', '');
+      let isAuthorized = false;
+      
+      if (token) {
+        try {
+          const jwt = require('jsonwebtoken');
+          const decoded = jwt.verify(token, process.env.JWT_SECRET);
+          const isAdmin = decoded.role === 'admin';
+          const isAuthor = post.author._id.toString() === decoded.userId;
+          
+          isAuthorized = isAdmin || isAuthor;
+        } catch (e) {}
+      }
+      
+      if (!isAuthorized) {
+        return res.status(404).json({ error: 'Post not found' });
+      }
+    }
+    
     res.json(post);
   } catch (error) {
     res.status(500).json({ error: error.message });

@@ -13,6 +13,7 @@ import FloatingActionMenu from './components/FloatingActionMenu';
 import ProgressBar from './components/ProgressBar';
 import NotificationToast from './components/NotificationToast';
 import NeuroBot from './components/NeuroBot';
+import ProtectedRoute from './components/ProtectedRoute';
 import Home from './pages/Home';
 import Post from './pages/Post';
 import CreatePost from './pages/CreatePost';
@@ -57,14 +58,17 @@ function AppContent() {
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/post/:id" element={<Post />} />
-                <Route path="/create" element={<CreatePost />} />
-                <Route path="/edit/:id" element={<EditPost />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/user/:userId" element={<UserProfile />} />
-                <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/admin-login" element={<AdminLogin />} />
-
+                
+                {/* Protected Routes */}
+                <Route element={<ProtectedRoute />}>
+                  <Route path="/create" element={<CreatePost />} />
+                  <Route path="/edit/:id" element={<EditPost />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/user/:userId" element={<UserProfile />} />
+                  <Route path="/admin" element={<AdminDashboard />} />
+                </Route>
               </Routes>
             </div>
           </motion.div>

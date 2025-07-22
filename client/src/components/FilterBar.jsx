@@ -57,7 +57,12 @@ function FilterBar({ filters, onFiltersChange, totalResults }) {
                 isDark ? 'bg-blue-500/20 text-blue-300' : 'bg-blue-100 text-blue-700'
               }`}
             >
-              <span>📂 Category</span>
+              <span className="flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                </svg>
+                Category
+              </span>
               <button
                 onClick={() => removeFilter('category')}
                 className="hover:bg-white/20 rounded-full p-0.5"
@@ -94,7 +99,12 @@ function FilterBar({ filters, onFiltersChange, totalResults }) {
                 isDark ? 'bg-purple-500/20 text-purple-300' : 'bg-purple-100 text-purple-700'
               }`}
             >
-              <span>📅 {filters.dateRange}</span>
+              <span className="flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                {filters.dateRange}
+              </span>
               <button
                 onClick={() => removeFilter('dateRange')}
                 className="hover:bg-white/20 rounded-full p-0.5"
@@ -112,7 +122,12 @@ function FilterBar({ filters, onFiltersChange, totalResults }) {
                 isDark ? 'bg-orange-500/20 text-orange-300' : 'bg-orange-100 text-orange-700'
               }`}
             >
-              <span>🔄 {filters.sortBy}</span>
+              <span className="flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                </svg>
+                {filters.sortBy}
+              </span>
               <button
                 onClick={() => removeFilter('sortBy')}
                 className="hover:bg-white/20 rounded-full p-0.5"
@@ -130,7 +145,12 @@ function FilterBar({ filters, onFiltersChange, totalResults }) {
                 isDark ? 'bg-yellow-500/20 text-yellow-300' : 'bg-yellow-100 text-yellow-700'
               }`}
             >
-              <span>⏱️ {filters.readingTime}</span>
+              <span className="flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {filters.readingTime}
+              </span>
               <button
                 onClick={() => removeFilter('readingTime')}
                 className="hover:bg-white/20 rounded-full p-0.5"
@@ -148,7 +168,12 @@ function FilterBar({ filters, onFiltersChange, totalResults }) {
                 isDark ? 'bg-pink-500/20 text-pink-300' : 'bg-pink-100 text-pink-700'
               }`}
             >
-              <span>👤 {filters.authorType}</span>
+              <span className="flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                {filters.authorType}
+              </span>
               <button
                 onClick={() => removeFilter('authorType')}
                 className="hover:bg-white/20 rounded-full p-0.5"
